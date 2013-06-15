@@ -41,7 +41,9 @@ ENTRY:
 	MOV DH, 0	;磁头0
 	MOV CL, 2	;扇区2,扇区1bios自动读取
 
+READLOOP:
 	MOV SI, 0	;记录失败次数的寄存器
+
 ;尝试读取磁盘
 RETRY:
 	MOV AH, 0X02	;AH=0X02,读盘
@@ -49,7 +51,7 @@ RETRY:
 	MOV BX, 0	;BX=0,ES*16+BX=0X0820*16+0=0X8200,0X8000-0X81FF这512字节留给启动区
 	MOV DL, 0X00	;A驱动器
 	INT 0X13	;调用磁盘bios
-	JNC FIN		;没有错的话跳转到FIN
+	JNC NEXT	;没有错的话跳转到NEXT
 	ADD SI, 1	;失败次数加1
 	CMP SI, 5	;比较SI与5
 	JAE ERROR	;SI>=5,跳转到ERROR
@@ -57,6 +59,14 @@ RETRY:
 	MOV DL, 0X00	;A驱动器
 	INT 0X13	;重置驱动器
 	JMP RETRY
+;读取下一个扇区
+NEXT:
+	MOV AX, ES	;把内存地址后移0X200
+	ADD AX, 0X0020
+	MOV ES, AX	;因为没有ADD ES, 0X20指令，不能直接操作ES寄存器，所以这里绕了下
+	ADD CL, 1
+	CMP CL, 18	;如果18个扇区没有读取完，继续
+	JBE READLOOP
 
 FIN:
 	HLT		;让cpu停止，等待指令
