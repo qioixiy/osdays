@@ -16,4 +16,3 @@ run:
 
 clean:
 	-rm *.bin *.lst *.img
-
