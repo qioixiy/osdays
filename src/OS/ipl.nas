@@ -41,12 +41,22 @@ ENTRY:
 	MOV DH, 0	;磁头0
 	MOV CL, 2	;扇区2,扇区1bios自动读取
 
+	MOV SI, 0	;记录失败次数的寄存器
+;尝试读取磁盘
+RETRY:
 	MOV AH, 0X02	;AH=0X02,读盘
 	MOV AL, 1	;1个扇区
 	MOV BX, 0	;BX=0,ES*16+BX=0X0820*16+0=0X8200,0X8000-0X81FF这512字节留给启动区
 	MOV DL, 0X00	;A驱动器
 	INT 0X13	;调用磁盘bios
-	JC ERROR	
+	JNC FIN		;没有错的话跳转到FIN
+	ADD SI, 1	;失败次数加1
+	CMP SI, 5	;比较SI与5
+	JAE ERROR	;SI>=5,跳转到ERROR
+	MOV AH, 0X00
+	MOV DL, 0X00	;A驱动器
+	INT 0X13	;重置驱动器
+	JMP RETRY
 
 FIN:
 	HLT		;让cpu停止，等待指令
