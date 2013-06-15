@@ -1,6 +1,6 @@
 ;hello-os
 ;tab=4
-
+	CYLS EQU 10	;10个柱面
 	ORG 0X7C00	;指明程序的装载地址
 
 ;以下的记述用于标准fat12格式的磁盘
@@ -67,6 +67,14 @@ NEXT:
 	ADD CL, 1
 	CMP CL, 18	;如果18个扇区没有读取完，继续
 	JBE READLOOP
+	MOV CL, 1
+	ADD DH, 1
+	CMP DH, 2	;读取两个磁头
+	JB READLOOP	;
+	MOV DH, 0
+	ADD CH, 1
+	CMP CH, CYLS	
+	JB READLOOP	;读取两个柱面
 
 FIN:
 	HLT		;让cpu停止，等待指令
