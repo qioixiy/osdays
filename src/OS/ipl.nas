@@ -31,8 +31,28 @@ ENTRY:
 	MOV SS, AX
 	MOV SP, 0X7C00
 	MOV DS, AX
- 	MOV ES, AX
 
+;一张软盘：80柱面，2个磁头，18扇区，一个扇区有512字节
+;80*2*18*512字节=1474560字节=1440KB=1.44MB
+;读磁盘
+ 	MOV AX, 0X0820	;ES:BX=缓冲地址,ES*16+BX
+	MOV ES, AX	;ES=0X0820
+	MOV CH, 0	;柱面0
+	MOV DH, 0	;磁头0
+	MOV CL, 2	;扇区2,扇区1bios自动读取
+
+	MOV AH, 0X02	;AH=0X02,读盘
+	MOV AL, 1	;1个扇区
+	MOV BX, 0	;BX=0,ES*16+BX=0X0820*16+0=0X8200,0X8000-0X81FF这512字节留给启动区
+	MOV DL, 0X00	;A驱动器
+	INT 0X13	;调用磁盘bios
+	JC ERROR	
+
+FIN:
+	HLT		;让cpu停止，等待指令
+	JMP FIN		;无限循环
+
+ERROR:
 	MOV SI, MSG
 
 PUTLOOP:
@@ -46,13 +66,10 @@ PUTLOOP:
 	INT 0X10	;调用显卡bios
 	JMP PUTLOOP
 
-FIN:
-	HLT		;让cpu停止，等待指令
-	JMP FIN		;无限循环
 
 MSG:
 	DB 0X0A, 0X0A	;换行两次
-	DB "HELLO, WORLD,zxyuan!"
+	DB "LOAD ERROR"
 	DB 0X0A		;换行
 	DB 0
 
