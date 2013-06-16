@@ -8,25 +8,31 @@ DEL      = $(TOOLPATH)del
 
 default:
 	$(MAKE) img
-img: 
-	$(MAKE) -r helloos.img
+
 ipl.bin : ipl.nas Makefile
 	$(NASK) ipl.nas ipl.bin ipl.lst
 
-helloos.img : ipl.bin Makefile
+haribote.sys: haribote.nas Makefile
+	$(NASK) haribote.nas haribote.sys haribote.lst
+
+haribote.img : ipl.bin haribote.sys Makefile
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
-	wbinimg src:ipl.bin len:512 from:0 to:0   imgout:helloos.img
-asm:
-	$(MAKE) -r ipl.bin
+	wbinimg src:ipl.bin len:512 from:0 to:0 \
+	copy from:haribote.sys to:@: \
+	imgout:haribote.img
+
+img:
+	$(MAKE) haribote.img
 
 run:
 	$(MAKE) img
-	copy helloos.img ..\..\tools\z_tools\qemu\fdimage0.bin
+	copy haribote.img ..\..\tools\z_tools\qemu\fdimage0.bin
 	$(MAKE) -C $(TOOLPATH)\qemu
 
 clean:
-	-rm *.bin *.lst *.img
+	-rm *.bin *.lst *~ *#
 
 src_only:
 	$(MAKE) clean
 	-$(DEL) haribote.img
+	-$(DEL) haribote.sys
