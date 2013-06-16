@@ -1,6 +1,8 @@
+void io_hlt(void);
+
 void HariMain(void)
 {
 fin:
-  /* 这里想写上HLT，但是C语言不能用 */
+  io_hlt();
   goto fin;
 }
