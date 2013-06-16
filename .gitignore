@@ -1,6 +1,7 @@
 *~
 *#
 *.img
+*.sys
 *.lst
 *.bin
 tools/z_tools/qemu/fdimage0.bin

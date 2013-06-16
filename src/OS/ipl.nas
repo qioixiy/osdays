@@ -75,10 +75,9 @@ NEXT:
 	ADD CH, 1
 	CMP CH, CYLS	
 	JB READLOOP	;读取两个柱面
-
-FIN:
-	HLT		;让cpu停止，等待指令
-	JMP FIN		;无限循环
+	
+;无条件跳转到0xc200，执行haribote.sys
+	JMP 0XC200
 
 ERROR:
 	MOV SI, MSG
@@ -94,6 +93,9 @@ PUTLOOP:
 	INT 0X10	;调用显卡bios
 	JMP PUTLOOP
 
+FIN:
+	HLT		;让cpu停止，等待指令
+	JMP FIN		;无限循环
 
 MSG:
 	DB 0X0A, 0X0A	;换行两次
