@@ -76,6 +76,7 @@ NEXT:
 	CMP CH, CYLS	
 	JB READLOOP	;读取两个柱面
 	
+	MOV [0X0FF0], CH;保持CH[CYLS=10]到内存0xff0处
 ;无条件跳转到0xc200，执行haribote.sys
 	JMP 0XC200
 
