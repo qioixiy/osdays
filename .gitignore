@@ -4,4 +4,5 @@
 *.sys
 *.lst
 *.bin
+src/OS/TAGS
 tools/z_tools/qemu/fdimage0.bin
