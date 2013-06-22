@@ -1,8 +1,14 @@
 *~
 *#
+*.diff
 *.img
 *.sys
 *.lst
 *.bin
+*.bim
+*.gas
+*.hrb
+*.map
+*.obj
 src/OS/TAGS
 tools/z_tools/qemu/fdimage0.bin
