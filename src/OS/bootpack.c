@@ -5,6 +5,7 @@ int  io_load_eflags(void);//加载标志位
 void io_store_eflags(int eflags);//还原标志位
 
 void init_palette(void);//设定调色板
+void init_screen(unsigned char *vram, int xsize, int ysize);//初始化窗口
 void set_palette(int start, int end, unsigned char *rgb);
 void bofill8(unsigned char *vram, int xsize, unsigned char c,int x0, int y0, int x1, int y1);
 
@@ -49,6 +50,15 @@ void HariMain(void)
   ysize = (*binfo).scrny;
   vram = (*binfo).vram;
 
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+
+  for (;;) {
+    io_hlt();
+  }
+}
+
+void init_screen(unsigned char *vram, int xsize, int ysize)
+{
   boxfill8(vram, xsize, COL8_008484,  0,         0,          xsize -  1, ysize - 29);
   boxfill8(vram, xsize, COL8_C6C6C6,  0,         ysize - 28, xsize -  1, ysize - 28);
   boxfill8(vram, xsize, COL8_FFFFFF,  0,         ysize - 27, xsize -  1, ysize - 27);
@@ -65,10 +75,6 @@ void HariMain(void)
   boxfill8(vram, xsize, COL8_848484, xsize - 47, ysize - 23, xsize - 47, ysize -  4);
   boxfill8(vram, xsize, COL8_FFFFFF, xsize - 47, ysize -  3, xsize -  4, ysize -  3);
   boxfill8(vram, xsize, COL8_FFFFFF, xsize -  3, ysize - 24, xsize -  3, ysize -  3);
-
-  for (;;) {
-    io_hlt();
-  }
 }
 
 void init_palette(void)
