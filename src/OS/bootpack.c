@@ -54,6 +54,7 @@ void HariMain(void)
   putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 40,8, COL8_C6C6C6, hankaku + '1' * 16);
   putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 48,8, COL8_C6C6C6, hankaku + '2' * 16);
   putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 56,8, COL8_C6C6C6, hankaku + '3' * 16);
+
   for (;;) {
     io_hlt();
   }
@@ -137,6 +138,7 @@ void putfont8(unsigned char *vram, int xsize, int ysize, int x, int y, char colo
   for (i = 0; i < 16; i++){
     p = vram + (y + i) * xsize + x;
     d = font[i];
+
     if ((d & 0x80) != 0) {p[0] = color; }
     if ((d & 0x40) != 0) {p[1] = color; }
     if ((d & 0x20) != 0) {p[2] = color; }
