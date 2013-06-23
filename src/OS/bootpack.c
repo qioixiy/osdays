@@ -7,7 +7,11 @@ void io_store_eflags(int eflags);//还原标志位
 void init_palette(void);//设定调色板
 void init_screen(unsigned char *vram, int xsize, int ysize);//初始化窗口
 void set_palette(int start, int end, unsigned char *rgb);
-void bofill8(unsigned char *vram, int xsize, unsigned char c,int x0, int y0, int x1, int y1);
+void boxfill8(unsigned char *vram, int xsize, unsigned char c,int x0, int y0, int x1, int y1);
+
+void putfont8(unsigned char *vram, //display a char
+	      int xsize, int ysize, int x, int y, 
+	      char color, char *font);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -32,26 +36,24 @@ struct BOOTINFO {
   char *vram;
 };
 
+extern char hankaku[4096];
 void HariMain(void)
 {
-  char *vram;
-  int xsize, ysize;
-  
   //bootinfo struct pointer
   struct BOOTINFO *binfo;
   
-  short *binfo_scrnx, *binfo_scrny;
-  int *binfo_vram;
-
   init_palette();
 
   binfo = (struct BOOTINFO *)0x0ff0;
-  xsize = (*binfo).scrnx;
-  ysize = (*binfo).scrny;
-  vram = (*binfo).vram;
-
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 8,8, COL8_C6C6C6, hankaku + 'A' * 16);
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 16,8, COL8_C6C6C6, hankaku + 'B' * 16);
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 24,8, COL8_C6C6C6, hankaku + 'C' * 16);
 
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 40,8, COL8_C6C6C6, hankaku + '1' * 16);
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 48,8, COL8_C6C6C6, hankaku + '2' * 16);
+  putfont8(binfo->vram , binfo->scrnx, binfo->scrny, 56,8, COL8_C6C6C6, hankaku + '3' * 16);
   for (;;) {
     io_hlt();
   }
@@ -125,4 +127,24 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c,int x0, int y0, in
       vram[y * xsize + x] = c;
     }
   }
+}
+
+void putfont8(unsigned char *vram, int xsize, int ysize, int x, int y, char color, char *font)
+{
+  int i;
+  char *p, d; //data
+  
+  for (i = 0; i < 16; i++){
+    p = vram + (y + i) * xsize + x;
+    d = font[i];
+    if ((d & 0x80) != 0) {p[0] = color; }
+    if ((d & 0x40) != 0) {p[1] = color; }
+    if ((d & 0x20) != 0) {p[2] = color; }
+    if ((d & 0x10) != 0) {p[3] = color; }
+    if ((d & 0x08) != 0) {p[4] = color; }
+    if ((d & 0x04) != 0) {p[5] = color; }
+    if ((d & 0x02) != 0) {p[6] = color; }
+    if ((d & 0x01) != 0) {p[7] = color; }
+  }
+  return;
 }
