@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 void io_hlt(void);//暂停系统
 void io_cli(void);//关闭中断
 void io_out8(int port, int data);
@@ -41,7 +43,8 @@ void HariMain(void)
 {
   //bootinfo struct pointer
   struct BOOTINFO *binfo;
-  
+  char s[50];
+
   init_palette();
 
   binfo = (struct BOOTINFO *)0x0ff0;
@@ -50,6 +53,9 @@ void HariMain(void)
   putfont8_asc(binfo->vram, binfo->scrnx, 8,8, COL8_FFFFFF, "ABC 123");
   putfont8_asc(binfo->vram, binfo->scrnx, 31,31, COL8_000000, "Haribote OS");
   putfont8_asc(binfo->vram, binfo->scrnx, 30,30, COL8_FFFFFF, "Haribote OS");
+  
+  sprintf(s, "scrnx = %d", binfo->scrnx);
+  putfont8_asc(binfo->vram, binfo->scrnx, 16,64, COL8_FFFFFF, s);
 
   for (;;) {
     io_hlt();
