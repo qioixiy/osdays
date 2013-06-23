@@ -17,6 +17,25 @@ void putfont8(unsigned char *vram, //display a char
 	      int xsize, int x, int y, 
 	      char color, char *font);
 void putfont8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *str);//put string
+
+//about GDT and IDT
+struct SEGMENT_DESCRIPTOR {
+  short limit_low, base_low;
+  char base_mid, access_right;
+  char limit_high, base_high;
+};
+
+struct GATE_DESCRIPTOR {
+  short offset_low, selector;
+  char dw_count, access_right;
+  short offset_high;
+};
+
+void load_gdtr(int limit, int addr);
+void load_idtr(int limit, int addr);
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
+void set_gatedesc(struct GATE_DESCRIPTOR * gd, int offset, int selector, int ar);
+
 #define COL8_000000 0
 #define COL8_FF0000 1
 #define COL8_00FF00 2
@@ -39,6 +58,58 @@ struct BOOTINFO {
   short scrnx,scrny;
   char *vram;
 };
+
+void init_gdtidt(void)
+{
+  //计划将0x00270000到0x0027ffff作为GDT使用
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)0x00270000;
+  //计划将0x0026f800到0x0026ffff作为IDT使用
+  struct GATE_DESCRIPTOR *idt = (struct GATE_DESCRIPTOR *)0x0026f800;
+  int i = 0;
+
+  //GDT的初始化
+  for (i = 0; i < 8192; i++) {
+    set_segmdesc(gdt + i, 0, 0, 0);
+  }
+  set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, 0x4092);
+  set_segmdesc(gdt + 2, 0x0007ffff, 0x00280000, 0x409a);
+  load_gdtr(0xffff, 0x00270000);
+  
+  //IDT的初始化
+  for (i = 0; i < 256; i++) {
+    set_gatedesc(idt + i, 0, 0, 0);
+  }
+  load_idtr(0x7ff, 0x0026f800);
+
+  return;
+}
+
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)
+{
+  if (limit > 0xfffff) {
+    ar |= 0x8000;//G_bit = 1
+    limit /= 0x1000;
+  }
+  sd->limit_low = limit & 0xffff;
+  sd->base_low  = base & 0xffff;
+  sd->base_mid  = (base >> 16) & 0xff;
+  sd->access_right = ar & 0xff;
+  sd->limit_high = ((limit >> 16) & 0x0f) | ((ar>>8) & 0xf0);
+  sd->base_high = (base>>24) & 0xff;
+
+  return;
+}
+
+void set_gatedesc(struct GATE_DESCRIPTOR * gd, int offset, int selector, int ar)
+{
+  gd->offset_low = offset & 0xffff;
+  gd->selector = selector;
+  gd->dw_count = (ar>>8) & 0xff;
+  gd->access_right = ar & 0xff;
+  gd->offset_high = (offset>>16) & 0xffff;
+  
+  return;
+}
 
 extern char hankaku[4096];
 void HariMain(void)
@@ -110,7 +181,7 @@ void init_mouse_cursor8(char *mouse, char bc)//准备鼠标指针【16×16】
 {
   static char cursor[16][16] = {
     "**************..",
-    "*OOOOOOOOOOO*....",
+    "*OOOOOOOOOOO*...",
     "*OOOOOOOOOO*....",
     "*OOOOOOOOO*.....",
     "*OOOOOOOO*......",
