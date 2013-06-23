@@ -20,3 +20,4 @@ void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, i
 void set_gatedesc(struct GATE_DESCRIPTOR * gd, int offset, int selector, int ar);
 
 #endif
+
