@@ -1,12 +1,14 @@
 #ifndef _GARPHIC_H
 #define _GARPHIC_H
 
+//naskinfo.nas
 void io_hlt(void);//暂停系统
 void io_cli(void);//关闭中断
 void io_out8(int port, int data);
 int  io_load_eflags(void);//加载标志位
 void io_store_eflags(int eflags);//还原标志位
 
+//graphic.h
 void init_palette(void);//设定调色板
 void init_screen(unsigned char *vram, int xsize, int ysize);//初始化窗口
 void init_mouse_cursor8(char *mouse, char bc);//准备鼠标指针【16×16】

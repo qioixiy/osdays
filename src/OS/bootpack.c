@@ -1,20 +1,20 @@
 #include <stdio.h>
-#include "graphic.h"
-#include "dsctbl.h"
+#include "bootpack.h"
 
-struct BOOTINFO {
-  char cyls, leds, vmode, reserve;
-  short scrnx,scrny;
-  char *vram;
-};
-
-extern char hankaku[4096];
 void HariMain(void)
 {
   //bootinfo struct pointer
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50], mcursor[256];
   int mx, my;
+
+    
+  init_gdtidt();
+  init_pic();//初始化PIC
+  io_sti();//开中断
+
+  io_out8(PIC0_IMR, 0xf9); /* PIC1打开中断(11111001) */
+  io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
@@ -24,7 +24,7 @@ void HariMain(void)
   putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
   sprintf(s, "(%d, %d)", mx, my);
   putfont8_asc(binfo->vram, binfo->scrnx, 0,0, COL8_FFFFFF, s);
-  
+
   for (;;) {
     io_hlt();
   }
