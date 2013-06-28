@@ -32,13 +32,17 @@ void inthandler21(int *esp)
 #define PORT_KEYDAT		0x0060
 
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  unsigned char data, s[4];
+  unsigned char data;
   io_out8(PIC0_OCW2, 0x61);//通知PIC IRQ-01已经受理完了
   data = io_in8(PORT_KEYDAT);
 
-  if (keybuf.next < sizeof(keybuf.data)) {
-    keybuf.data[keybuf.next] = data;
-    keybuf.next++;
+  if (keybuf.len < 32){
+    keybuf.data[keybuf.next_w] = data;
+    keybuf.len++;
+    keybuf.next_w++;
+    if (keybuf.next_w == 32) {
+      keybuf.next_w = 0;
+    }
   }
 
   return;
