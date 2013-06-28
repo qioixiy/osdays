@@ -5,10 +5,12 @@ void HariMain(void)
 {
   //bootinfo struct pointer
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-  char s[50], mcursor[256];
+  char s[50], mcursor[256], keybuf[32];
   int mx, my;
   unsigned char i, j ;
     
+  fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
+  
   init_gdtidt();
   init_pic();//初始化PIC
   io_sti();//开中断
@@ -28,16 +30,10 @@ void HariMain(void)
   for (;;) {
     io_cli();
     
-    if (keybuf.len == 0 ){
+    if (0 == fifo8_status(&keyfifo)){
       io_stihlt();
     } else {
-      i = keybuf.data[keybuf.next_r];
-      keybuf.next_r++;
-      keybuf.len--;
-      if (keybuf.next_r == 32) {
-	keybuf.next_r = 0;
-      }
-
+      i = fifo8_get(&keyfifo);
       io_sti();
       sprintf(s, "%02X", i);
       boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);

@@ -32,7 +32,7 @@ struct KEYBUF{
   int next_r, next_w, len;
 };
 
-extern struct KEYBUF keybuf;
+extern struct FIFO8 keyfifo;
 /* int.h */
 void init_pic(void);
 void inthandler21(int *esp);

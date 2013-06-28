@@ -2,6 +2,7 @@
 #include "int.h"
 #include "bootpack.h"
 #include "graphic.h"
+#include "fifo.h"
 
 void init_pic(void)
 {
@@ -23,8 +24,8 @@ void init_pic(void)
   return;
 }
 
-//定义一个全局keyboard buffer
-struct KEYBUF keybuf;
+//定义一个全局keyboard fifo
+struct FIFO8 keyfifo;
 
 //keyboard int
 void inthandler21(int *esp)
@@ -36,15 +37,7 @@ void inthandler21(int *esp)
   io_out8(PIC0_OCW2, 0x61);//通知PIC IRQ-01已经受理完了
   data = io_in8(PORT_KEYDAT);
 
-  if (keybuf.len < 32){
-    keybuf.data[keybuf.next_w] = data;
-    keybuf.len++;
-    keybuf.next_w++;
-    if (keybuf.next_w == 32) {
-      keybuf.next_w = 0;
-    }
-  }
-
+  fifo8_put(&keyfifo, data);
   return;
 }
 
