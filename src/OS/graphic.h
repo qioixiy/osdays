@@ -4,6 +4,7 @@
 //naskinfo.nas
 void io_hlt(void);//暂停系统
 void io_cli(void);//关闭中断
+int io_in8(int port);
 void io_out8(int port, int data);
 int  io_load_eflags(void);//加载标志位
 void io_store_eflags(int eflags);//还原标志位
