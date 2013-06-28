@@ -30,9 +30,6 @@ struct FIFO8 keyfifo;
 //keyboard int
 void inthandler21(int *esp)
 {
-#define PORT_KEYDAT		0x0060
-
-  struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   unsigned char data;
   io_out8(PIC0_OCW2, 0x61);//通知PIC IRQ-01已经受理完了
   data = io_in8(PORT_KEYDAT);

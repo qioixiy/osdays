@@ -1,6 +1,38 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+void wait_KBC_sendready(void)
+{
+  //等待键盘控制电路准备完毕
+  for (;;) {
+    if (( io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
+      break;
+    }
+  }
+  return;
+}
+
+void enable_mouse(void)
+{
+  //激活鼠标
+  wait_KBC_sendready();
+  io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+  wait_KBC_sendready();
+  io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+  return;//正常情况下键盘控制器会返回0xfa
+}
+
+void init_keyboard(void)
+{
+  //初始化键盘控制电路
+  wait_KBC_sendready();
+  io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
+  wait_KBC_sendready();
+  io_out8(PORT_KEYDAT, KBC_MODE);
+  
+  return;
+}
+
 void HariMain(void)
 {
   //bootinfo struct pointer
@@ -17,7 +49,9 @@ void HariMain(void)
 
   io_out8(PIC0_IMR, 0xf9); /* PIC1打开中断(11111001) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
-
+  
+  init_keyboard();
+  
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
   mx = (binfo->scrnx - 16) / 2;
@@ -26,6 +60,8 @@ void HariMain(void)
   putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
   sprintf(s, "(%d, %d)", mx, my);
   putfont8_asc(binfo->vram, binfo->scrnx, 0,0, COL8_FFFFFF, s);
+
+  enable_mouse();
 
   for (;;) {
     io_cli();
