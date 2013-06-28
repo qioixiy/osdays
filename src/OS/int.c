@@ -23,6 +23,9 @@ void init_pic(void)
   return;
 }
 
+//定义一个全局keyboard buffer
+struct KEYBUF keybuf;
+
 //keyboard int
 void inthandler21(int *esp)
 {
@@ -32,10 +35,12 @@ void inthandler21(int *esp)
   unsigned char data, s[4];
   io_out8(PIC0_OCW2, 0x61);//通知PIC IRQ-01已经受理完了
   data = io_in8(PORT_KEYDAT);
-  sprintf(s, "%02X", data);
-  boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 15, 15, 31);
-  putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-  
+
+  if (keybuf.flag == 0) {
+    keybuf.data = data;
+    keybuf.flag = 1;
+  }
+
   return;
 }
 

@@ -7,7 +7,7 @@ void HariMain(void)
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50], mcursor[256];
   int mx, my;
-
+  unsigned char i = 0;
     
   init_gdtidt();
   init_pic();//³õÊ¼»¯PIC
@@ -26,6 +26,17 @@ void HariMain(void)
   putfont8_asc(binfo->vram, binfo->scrnx, 0,0, COL8_FFFFFF, s);
 
   for (;;) {
-    io_hlt();
+    io_cli();
+    
+    if (keybuf.flag == 0) {
+      io_stihlt();
+    } else {
+      i = keybuf.data;
+      keybuf.flag = 0;
+      io_sti();
+      sprintf(s, "%02X", i);
+      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+      putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+    }
   }
 }
