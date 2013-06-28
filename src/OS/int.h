@@ -44,6 +44,7 @@ struct KEYBUF{
 };
 
 extern struct FIFO8 keyfifo;
+extern struct FIFO8 mousefifo;
 /* int.h */
 void init_pic(void);
 void inthandler21(int *esp);
