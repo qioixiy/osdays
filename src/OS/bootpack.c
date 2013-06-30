@@ -104,13 +104,13 @@ void HariMain(void)
   //鼠标相关，mouse_phase,鼠标状态；
   struct MOUSE_DEC mdec;
 
+  init_gdtidt();
+  init_pic();//初始化PIC
+  io_sti();//PIC初始化完成，开中断
+
   fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
   
-  init_gdtidt();
-  init_pic();//初始化PIC
-  io_sti();//开中断
-
   io_out8(PIC0_IMR, 0xf9); /* PIC1打开中断(11111001) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
   
