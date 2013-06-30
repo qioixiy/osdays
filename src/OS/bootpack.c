@@ -16,6 +16,9 @@ void wait_KBC_sendready(void)
 struct MOUSE_DEC {
   unsigned char buf[3];//鼠标的3字节buffer
   unsigned char phase;//鼠标接收的状态
+
+  int x, y;//x,y方向
+  int btn;//按键状态
 };
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
@@ -44,8 +47,10 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data)
     res = 0;
   }else if(1 == mdec->phase){
     //等待鼠标的第一个字节
-    mdec->buf[0] = data;
-    mdec->phase = 2;
+    if (0x08 == (data & 0xC8)) {//第一个字节正确？
+      mdec->buf[0] = data;
+      mdec->phase = 2;
+    }
     res = 0;
   } else if (2 == mdec->phase) {
     //等待鼠标的第2个字节
@@ -56,6 +61,20 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data)
     //等待鼠标的第3个字节
     mdec->buf[2] = data;
     mdec->phase = 1;
+
+    mdec->btn = mdec->buf[0] & 0x07;
+    mdec->x = mdec->buf[1];
+    mdec->y = mdec->buf[2];
+    
+    if ((mdec->buf[0] & 0x10) != 0) {
+      mdec->x |= 0xffffff00;
+    }
+    if ((mdec->buf[0] & 0x20) != 0) {
+      mdec->y |= 0xffffff00;
+    }
+
+    mdec->y = - mdec->y;//鼠标的Y方向与画面符号相反
+    
     res = 1;
   }
   
@@ -127,10 +146,21 @@ void HariMain(void)
 	i = fifo8_get(&mousefifo);
 	io_sti();
 
+	//鼠标的3个字节都齐全了，显示出来
 	if (mouse_decode(&mdec, i) != 0) {
-	  //鼠标的3个字节都齐全了，显示出来
-	  sprintf(s, "%02X,%02X,%02X", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
-	  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
+	  
+	  sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
+	  if (mdec.btn & 0x01) {
+	    s[1] = 'L';
+	  } 
+	  if (mdec.btn & 0x02) {
+	    s[3] = 'R';
+	  } 
+	  if (mdec.btn & 0x04) {
+	    s[2] = 'C';
+	  } 
+
+	  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 15*8 - 1, 31);
 	  putfont8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
 	}
       }
