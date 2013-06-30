@@ -17,6 +17,10 @@ IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = $(TOOLPATH)copy
 DEL      = $(TOOLPATH)del
 
+OBJS	 = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj \
+	mouse.obj keyboard.obj
+
+
 default:
 	$(MAKE) img
 
@@ -41,9 +45,9 @@ hankaku.bin: hankaku.txt Makefile
 hankaku.obj: hankaku.bin Makefile
 	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
 
-bootpack.bim: bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map\
-		bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj
+bootpack.bim: $(OBJS) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map $(OBJS)
+
 #3MB+64KB=3136KB
 bootpack.hrb: bootpack.bim Makefile
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0

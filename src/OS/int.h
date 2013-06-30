@@ -26,17 +26,6 @@
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
 
-//键盘鼠标设置
-#define PORT_KEYDAT 0x0060
-#define PORT_KEYSTA 0X0064
-#define PORT_KEYCMD 0X0064
-#define KEYSTA_SEND_NOTREADY 0X02
-#define KEYCMD_WRITE_MODE 0X60
-#define KBC_MODE 0X47
-//鼠标设置
-#define KEYCMD_SENDTO_MOUSE 0Xd4
-#define MOUSECMD_ENABLE 0Xf4
-
 //KEYBOARD BUFFER
 struct KEYBUF{
   unsigned char data[32];

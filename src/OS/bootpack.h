@@ -4,6 +4,8 @@
 #include "graphic.h"
 #include "dsctbl.h"
 #include "int.h"
+#include "keyboard.h"
+#include "mouse.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
