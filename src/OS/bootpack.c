@@ -42,6 +42,9 @@ void HariMain(void)
   int mx, my;
   unsigned char i, j ;
     
+  //鼠标相关，mouse_phase,鼠标状态；
+  unsigned char mouse_phase, mouse_dbuf[3];
+
   fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
   
@@ -64,6 +67,7 @@ void HariMain(void)
   putfont8_asc(binfo->vram, binfo->scrnx, 0,0, COL8_FFFFFF, s);
 
   enable_mouse();
+  mouse_phase = 0;//进入到等待鼠标的0xfa的状态
 
   for (;;) {
     io_cli();
@@ -74,6 +78,7 @@ void HariMain(void)
       if (fifo8_status(&keyfifo) != 0) {
 	i = fifo8_get(&keyfifo);
 	io_sti();
+
 	sprintf(s, "%02X", i);
 	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
 	putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
@@ -81,9 +86,31 @@ void HariMain(void)
       if (fifo8_status(&mousefifo) != 0) {
 	i = fifo8_get(&mousefifo);
 	io_sti();
-	sprintf(s, "%02X", i);
-	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 47, 31);
-	putfont8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+
+	if (0 == mouse_phase ) {
+	  //等待鼠标的0xfa状态
+	  if (i == 0xfa) {
+	    mouse_phase = 1;
+	  }
+	}else if(1 == mouse_phase){
+	  //等待鼠标的第一个字节
+	  mouse_dbuf[0] = i;
+	  mouse_phase = 2;
+	} else if (2 == mouse_phase) {
+	  //等待鼠标的第2个字节
+	  mouse_dbuf[1] = i;
+	  mouse_phase = 3;
+	} else if (mouse_phase == 3) {
+	  //等待鼠标的第3个字节
+	  mouse_dbuf[2] = i;
+	  mouse_phase = 1;
+	  
+	  //鼠标的3个字节都齐全了，显示出来
+	  sprintf(s, "%02X,%02X,%02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
+	  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
+	  putfont8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+
+	}
       }
     }
   }
