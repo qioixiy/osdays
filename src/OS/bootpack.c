@@ -12,14 +12,54 @@ void wait_KBC_sendready(void)
   return;
 }
 
-void enable_mouse(void)
+//鼠标设备描述结构
+struct MOUSE_DEC {
+  unsigned char buf[3];//鼠标的3字节buffer
+  unsigned char phase;//鼠标接收的状态
+};
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
+
+void enable_mouse(struct MOUSE_DEC *mdec)
 {
   //激活鼠标
   wait_KBC_sendready();
   io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
   wait_KBC_sendready();
   io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-  return;//正常情况下键盘控制器会返回0xfa
+
+  mdec->phase = 0;//正常情况下键盘控制器会返回0xfa
+  return;
+}
+
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data)
+{
+  int res = 0;
+
+  if (0 == mdec->phase ) {
+    //等待鼠标的0xfa状态
+    if (data == 0xfa) {
+      mdec->phase = 1;
+    }
+    res = 0;
+  }else if(1 == mdec->phase){
+    //等待鼠标的第一个字节
+    mdec->buf[0] = data;
+    mdec->phase = 2;
+    res = 0;
+  } else if (2 == mdec->phase) {
+    //等待鼠标的第2个字节
+    mdec->buf[1] = data;
+    mdec->phase = 3;
+    res = 0;
+  } else if (mdec->phase == 3) {
+    //等待鼠标的第3个字节
+    mdec->buf[2] = data;
+    mdec->phase = 1;
+    res = 1;
+  }
+  
+  return res;
 }
 
 void init_keyboard(void)
@@ -43,7 +83,7 @@ void HariMain(void)
   unsigned char i, j ;
     
   //鼠标相关，mouse_phase,鼠标状态；
-  unsigned char mouse_phase, mouse_dbuf[3];
+  struct MOUSE_DEC mdec;
 
   fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
@@ -66,8 +106,8 @@ void HariMain(void)
   sprintf(s, "(%d, %d)", mx, my);
   putfont8_asc(binfo->vram, binfo->scrnx, 0,0, COL8_FFFFFF, s);
 
-  enable_mouse();
-  mouse_phase = 0;//进入到等待鼠标的0xfa的状态
+  //mouse init
+  enable_mouse(&mdec);
 
   for (;;) {
     io_cli();
@@ -87,29 +127,11 @@ void HariMain(void)
 	i = fifo8_get(&mousefifo);
 	io_sti();
 
-	if (0 == mouse_phase ) {
-	  //等待鼠标的0xfa状态
-	  if (i == 0xfa) {
-	    mouse_phase = 1;
-	  }
-	}else if(1 == mouse_phase){
-	  //等待鼠标的第一个字节
-	  mouse_dbuf[0] = i;
-	  mouse_phase = 2;
-	} else if (2 == mouse_phase) {
-	  //等待鼠标的第2个字节
-	  mouse_dbuf[1] = i;
-	  mouse_phase = 3;
-	} else if (mouse_phase == 3) {
-	  //等待鼠标的第3个字节
-	  mouse_dbuf[2] = i;
-	  mouse_phase = 1;
-	  
+	if (mouse_decode(&mdec, i) != 0) {
 	  //鼠标的3个字节都齐全了，显示出来
-	  sprintf(s, "%02X,%02X,%02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
+	  sprintf(s, "%02X,%02X,%02X", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
 	  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
 	  putfont8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-
 	}
       }
     }
