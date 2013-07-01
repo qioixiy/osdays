@@ -6,6 +6,7 @@
 #include "int.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "memory.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
@@ -13,8 +14,5 @@ struct BOOTINFO {
   char *vram;
 };
 #define ADR_BOOTINFO 0X00000FF0
-
-#define EFLAGS_AC_BIT 0x00040000
-#define CR0_CACHE_DISABLE 0x60000000
 
 #endif
