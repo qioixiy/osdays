@@ -1,6 +1,65 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+unsigned int memtest(unsigned int start, unsigned int end)
+{
+  char flg486 = 0;
+  unsigned int eflg, cr0, i;
+
+  //确认CPU是386还是486以上的
+  eflg = io_load_eflags();
+  eflg |= EFLAGS_AC_BIT;//AC-bit = 1
+  io_store_eflags(eflg);
+  eflg = io_load_eflags();
+
+  //如果是386，即使是设定AC=1，AC的值还是会自动回到0
+  if ((eflg & EFLAGS_AC_BIT) != 0) {
+      flg486 = 1;
+  }
+  eflg &= ~EFLAGS_AC_BIT;//AC-bit = 0
+  io_store_eflags(eflg);
+
+  if (flg486 != 0) {
+    cr0 = load_cr0();
+    cr0 |= CR0_CACHE_DISABLE;//禁止缓冲
+    store_cr0(cr0);
+  }
+
+  i = memtest_sub(start, end);
+
+  if (flg486 != 0) {
+    cr0 = load_cr0();
+    cr0 &= ~CR0_CACHE_DISABLE;//允许缓冲
+    store_cr0(cr0);
+  }
+
+  return i;
+}
+
+//*
+unsigned int memtest_sub(unsigned int start, unsigned int end)
+{
+  unsigned int i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
+
+  for (i = start; i <= end; i += 1000) {
+    p = (unsigned int *)(i + 0xffc);
+    old = *p;//先记住修改前的值
+    *p = pat0;//试写
+    *p ^= 0xffffffff;//反转
+    if(*p != pat1) {//检查反转结果
+not_memory:
+      *p = old;
+      break;
+    }
+    *p ^= 0xffffffff;//再次反转
+    if (*p != pat0){ //检查值是否反转
+      goto not_memory;
+    }
+    *p = old;
+  }
+  return i;
+}//*/
+
 void HariMain(void)
 {
   //bootinfo struct pointer
@@ -9,6 +68,7 @@ void HariMain(void)
   char keybuf[32], mousebuf[128];
   int mx, my;
   unsigned char i, j ;
+  unsigned int mem_size;
     
   //鼠标相关，mouse_phase,鼠标状态；
   struct MOUSE_DEC mdec;
@@ -36,6 +96,10 @@ void HariMain(void)
 
   //mouse init
   enable_mouse(&mdec);
+
+  mem_size = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
+  sprintf(s, "memory %dMB", mem_size);
+  putfont8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();

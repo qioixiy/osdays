@@ -136,3 +136,13 @@ _asm_inthandler2c:
 	POP DS
 	POP ES
 	IRETD
+
+	GLOBAL _load_cr0, _store_cr0
+_load_cr0:		;int load_cr0();
+	MOV EAX, CR0
+	RET
+
+_store_cr0:		;void store_cr0(int cr0)
+	MOV EAX, [ESP + 4]
+	MOV CR0, EAX
+	RET
