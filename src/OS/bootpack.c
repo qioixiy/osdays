@@ -38,8 +38,16 @@ void HariMain(void)
   //mouse init
   enable_mouse(&mdec);
 
-  mem_size = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-  sprintf(s, "memory %dMB", mem_size);
+  unsigned int memtotal;
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+
+  memtotal = memtest(0x00400000, 0xbfffffff);//获取内存真实的大小
+  memman_init(memman);
+  memman_free(memman, 0x00001000, 0x0009e000);
+  memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
+  sprintf(s, "memory %dMB free : %dKB",
+	  memtotal / (1024  * 1024), memman_total(memman)/ 1024);
   putfont8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
