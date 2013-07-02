@@ -77,6 +77,24 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size)
   return 0;//分配失败
 }
 
+//4k为单元进行分配
+unsigned int memman_alloc_4k(struct MEMMAN * man, unsigned int size)
+{
+  unsigned int a;
+  size = (size + 0xfff) & 0xfffff000;//向上舍入4K
+  a = memman_alloc(man, size);
+  return a;
+}
+
+//4k单元释放
+int memman_free_4k(struct MEMMAN * man, unsigned int addr, unsigned int size) 
+{
+  int i;
+  size = (size + 0xfff) & 0xfffff000;//向上舍入4K
+  i = memman_free(man, addr, size);
+  return i;
+}
+
 int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size)
 {
   int i, j;
