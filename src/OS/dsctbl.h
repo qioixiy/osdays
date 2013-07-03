@@ -24,6 +24,7 @@ struct GATE_DESCRIPTOR {
 #define AR_CODE32_ER	0x409a
 #define AR_INTGATE32	0x008e
 
+void init_gdtidt(void);
 void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);

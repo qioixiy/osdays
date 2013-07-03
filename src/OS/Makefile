@@ -18,7 +18,7 @@ COPY     = $(TOOLPATH)copy
 DEL      = $(TOOLPATH)del
 
 OBJS	 = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj \
-	mouse.obj keyboard.obj memory.obj
+	mouse.obj keyboard.obj memory.obj sheet.obj
 
 
 default:

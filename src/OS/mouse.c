@@ -1,5 +1,6 @@
 #include "mouse.h"
 #include "keyboard.h"
+#include "naskfunc.h"
 
 // Û±Í…Ë÷√
 #define KEYCMD_SENDTO_MOUSE 0Xd4

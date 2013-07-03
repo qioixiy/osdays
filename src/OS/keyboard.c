@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "naskfunc.h"
 
 void wait_KBC_sendready(void)
 {

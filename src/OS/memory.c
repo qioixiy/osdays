@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "naskfunc.h"
 
 unsigned int memtest(unsigned int start, unsigned int end)
 {

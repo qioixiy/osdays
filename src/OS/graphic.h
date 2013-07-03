@@ -11,7 +11,7 @@ void io_store_eflags(int eflags);//还原标志位
 
 //graphic.h
 void init_palette(void);//设定调色板
-void init_screen(unsigned char *vram, int xsize, int ysize);//初始化窗口
+void init_screen8(unsigned char *vram, int xsize, int ysize);//初始化窗口
 void init_mouse_cursor8(char *mouse, char bc);//准备鼠标指针【16×16】
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c,int x0, int y0, int x1, int y1);

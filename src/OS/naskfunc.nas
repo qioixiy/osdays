@@ -20,7 +20,7 @@ _io_hlt: 		;void _io_hlt(void)
 _io_cli:		;void _io_cli(void)
 	CLI
 	RET
-_io_sti:		;void io_str(void)
+_io_sti:		;void io_sti(void)
 	STI
 	RET
 _io_stihlt:		;void io_stihlt(void)
