@@ -89,7 +89,7 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height)
       }
       ctl->top--;//由于显示的图层减少一个，top -= 1
     }
-    sheet_refresh(ctl);//按照新的图层信息重绘
+    sheet_refreshsub(ctl,sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);//按照新的图层信息重绘
   } else if (old < height ) {//比以前要高
     if (old >= 0) {//以前是显示的
       //向下移动图层
@@ -107,14 +107,23 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height)
       ctl->sheets[height] = sht;
       ctl->top++;//图层高度加1
     }
-    sheet_refresh(ctl);//重绘
+    sheet_refreshsub(ctl,sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);//按照新的图层信息重绘
   } else {//没有改变
     return;
   }
 }
 
 //重绘
-void sheet_refresh(struct SHTCTL *ctl)
+void sheet_refresh(struct SHTCTL *ctl, struct SHEET *sht, int bx0, int by0, int bx1, int by1)
+{
+  if (sht->height >= 0) {//如果正在显示，才刷新
+    sheet_refreshsub(ctl, sht->vx0 + bx0, sht->vy0 + by0, sht->vx0 + bx1, sht->vy0 + by1);
+  }
+  return;
+}
+
+//重绘sub
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1)
 {
   int h, bx, by, vx, vy;
   unsigned char *buf;
@@ -129,9 +138,11 @@ void sheet_refresh(struct SHTCTL *ctl)
       vy = sht->vy0 + by;
       for (bx = 0; bx < sht->bxsize; bx++) {
 	vx = sht->vx0 + bx;
-	c = buf[by * sht->bxsize + bx];
-	if (c != sht->col_inv) {
-	  vram[vy * ctl->xsize + vx] = c;
+	if (vx0 <= vx && vx <vx1 && vy0 <=vy && vy <vy1) {
+	  c = buf[by * sht->bxsize + bx];
+	  if (c != sht->col_inv) {
+	    vram[vy * ctl->xsize + vx] = c;
+	  }
 	}
       }
     }
@@ -142,10 +153,12 @@ void sheet_refresh(struct SHTCTL *ctl)
 //滑动图层
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0)
 {
+  int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
   sht->vx0 = vx0;
   sht->vy0 = vy0;
   if (sht->height >= 0) {//如果图层在显示，则刷新
-    sheet_refresh(ctl);
+    sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0+sht->bxsize, old_vy0+sht->bysize);
+    sheet_refreshsub(ctl, vx0, vy0, vx0+sht->bxsize, vy0+sht->bysize);
   }
   return;
 }
