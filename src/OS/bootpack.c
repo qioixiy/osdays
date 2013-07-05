@@ -135,7 +135,6 @@ void HariMain(void)
 	  sheet_refresh(shtctl, sht_back, 0, 0, 80, 16);
 	  //滑动鼠标显示，包含sheet_reflush
 	  sheet_slide(shtctl, sht_mouse, mx, my);
-	  sheet_refresh(shtctl, sht_back, 0, 0, 320,200);
 	}
       }
     }
