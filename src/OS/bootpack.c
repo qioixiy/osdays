@@ -44,21 +44,28 @@ void HariMain(void)
   struct SHTCTL *shtctl;
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 
-  struct SHEET *sht_back, *sht_mouse;//背景和鼠标图层
+  struct SHEET *sht_back, *sht_mouse, *sht_win;//背景和鼠标图层
+ 
   sht_back = sheet_alloc(shtctl);
   sht_mouse = sheet_alloc(shtctl);
+  sht_win = sheet_alloc(shtctl);
   
-  unsigned char *buf_back, buf_mouse[256];
+  unsigned char *buf_back, buf_mouse[256], *buf_win;
   buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
-  
+  buf_win = (unsigned char *)memman_alloc_4k(memman, 160*68);
+
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);//没有透明色
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);//透明色号99
+  sheet_setbuf(sht_win, buf_win, 160, 68, -1);//透明色号99
   
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);//背景色号99
+  make_window8(buf_win, 160, 68, "window");//
+  putfont8_asc(buf_win, 160, 24, 28, COL8_000000, "Welcome to");
+  putfont8_asc(buf_win, 160, 24, 44, COL8_000000, "Haribote-OS");
 
   sheet_slide(sht_back, 0, 0);//移动背景图层，同时显示出来
-
+  sheet_slide(sht_win, 80, 72);
   //鼠标初始位置
   mx = (binfo->scrnx - 16) / 2;
   my = (binfo->scrny - 16) / 2;
@@ -66,7 +73,8 @@ void HariMain(void)
   sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
   //
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_mouse, 1);
+  sheet_updown(sht_win, 1);
+  sheet_updown(sht_mouse, 2);
   
   sprintf(s, "(%3d, %3d)", mx, my);
   putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);

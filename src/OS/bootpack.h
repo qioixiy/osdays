@@ -10,6 +10,7 @@
 #include "mouse.h"
 #include "memory.h"
 #include "sheet.h"
+#include "window.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
