@@ -146,8 +146,8 @@ void HariMain(void)
 	  putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);//显示坐标
 	  sheet_refresh(sht_back, 0, 0, 80, 16);
 	  //滑动鼠标显示，包含sheet_reflush
+
 	  sheet_slide(sht_mouse, mx, my);
-	  sheet_refresh(sht_back, 0, 0, 320,200);
 	}
       }
     }
