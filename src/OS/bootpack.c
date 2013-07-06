@@ -6,7 +6,7 @@ void HariMain(void)
   //bootinfo struct pointer
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50], mcursor[256];
-  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
+  struct FIFO8 timerfifo;
   char keybuf[32], mousebuf[128], timerbuf[8], timerbuf2[8], timerbuf3[8];
   struct TIMER *timer, *timer2, *timer3;
 
@@ -27,15 +27,16 @@ void HariMain(void)
 
   fifo8_init(&timerfifo, sizeof(timerbuf), timerbuf);
   timer = timer_alloc();
-  timer_init(timer, &timerfifo, 1);
+  timer_init(timer, &timerfifo, 10);
   timer_settime(timer, 1000);
-  fifo8_init(&timerfifo2, sizeof(timerbuf2), timerbuf2);
+
+  fifo8_init(&timerfifo, sizeof(timerbuf2), timerbuf2);
   timer2 = timer_alloc();
-  timer_init(timer2, &timerfifo2, 2);
+  timer_init(timer2, &timerfifo, 3);
   timer_settime(timer2, 300);
-  fifo8_init(&timerfifo3, sizeof(timerbuf3), timerbuf3);
+  fifo8_init(&timerfifo, sizeof(timerbuf3), timerbuf3);
   timer3 = timer_alloc();
-  timer_init(timer3, &timerfifo3, 3);
+  timer_init(timer3, &timerfifo, 1);
   timer_settime(timer3, 50);
   
   io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
@@ -106,9 +107,7 @@ void HariMain(void)
     io_cli();
     
     if (0 == fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + 
-	fifo8_status(&timerfifo) + 
-	fifo8_status(&timerfifo2) +
-	fifo8_status(&timerfifo3) ){
+	fifo8_status(&timerfifo)){
       io_sti();
     } else {
       if (fifo8_status(&keyfifo) != 0) {
@@ -120,28 +119,24 @@ void HariMain(void)
       }
       if (fifo8_status(&timerfifo) != 0) {
 	i = fifo8_get(&timerfifo);
-	io_sti();
-	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
-	sheet_refresh(sht_back, 0, 64, 56, 80);
-      }
-      if (fifo8_status(&timerfifo2) != 0) {
-	i = fifo8_get(&timerfifo2);
-	io_sti();
-	putfont8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
-	sheet_refresh(sht_back, 0, 80, 48, 96);
-      }
-      if (fifo8_status(&timerfifo3) != 0) {
-	i = fifo8_get(&timerfifo3);
-	io_sti();
-	if(i != 0) {
-	  timer_init(timer3, &timerfifo3, 0);//设置为0
-	  boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+	io_sti(); 
+	if (10 == i) {
+	  putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
+	  sheet_refresh(sht_back, 0, 64, 56, 80);
+	} else if (3 == i) {
+	  putfont8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
+	  sheet_refresh(sht_back, 0, 80, 48, 96);
 	} else {
-	  timer_init(timer3, &timerfifo3, 1);//设置为1
-	  boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+	  if(i != 0) {
+	    timer_init(timer3, &timerfifo, 0);//设置为0
+	    boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+	  } else {
+	    timer_init(timer3, &timerfifo, 1);//设置为1
+	    boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+	  }
+	  timer_settime(timer3, 50);
+	  sheet_refresh(sht_back, 8, 96, 16, 112);
 	}
-	timer_settime(timer3, 50);
-	sheet_refresh(sht_back, 8, 96, 16, 112);
       }
 
       if (fifo8_status(&mousefifo) != 0) {
