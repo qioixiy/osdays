@@ -54,7 +54,7 @@ void timer_init(struct TIMER *timer,struct FIFO8 *fifo, unsigned char data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-  timer->timeout = timeout;
+  timer->timeout = timeout + timerctl.count;
   timer->flags = TIMER_FLAGS_USING;
   return;
 }
@@ -67,12 +67,27 @@ void inthandler20(int *esp)
   
   for(i = 0; i < MAX_TIMER; i++) {
     if (timerctl.timer[i].flags == TIMER_FLAGS_USING ){//如果设定了超时
-      timerctl.timer[i].timeout--;
-      if (timerctl.timer[i].timeout == 0) {//超时已经到
+      if (timerctl.timer[i].timeout <= timerctl.count) {//超时已经到
 	timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
 	fifo8_put(timerctl.timer[i].fifo, timerctl.timer[i].data);
       }
     }
   }
   return;
+}
+
+//时间溢出调整
+void timer_adjust(void)
+{
+  int t0 = timerctl.count;
+  int i = 0;
+  io_cli();
+  
+  timerctl.count -= t0;
+  for (i = 0; i < MAX_TIMER; i++) {
+    if (timerctl.timer[i].flags == TIMER_FLAGS_USING) {
+      timerctl.timer[i].timeout -= t0;
+    }
+  }
+  io_sti();
 }
