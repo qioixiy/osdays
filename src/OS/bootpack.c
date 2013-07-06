@@ -6,7 +6,8 @@ void HariMain(void)
   //bootinfo struct pointer
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50], mcursor[256];
-  char keybuf[32], mousebuf[128];
+  struct FIFO8 timerfifo;
+  char keybuf[32], mousebuf[128], timerbuf[8];
   int mx, my;
   unsigned char i;
     
@@ -19,8 +20,11 @@ void HariMain(void)
 
   fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
+  fifo8_init(&timerfifo, sizeof(timerbuf), timerbuf);
 
-  init_pit();  
+  init_pit();  //必须先初始化pit，然后才能使用settimer
+  settimer(1000, &timerfifo, 1);
+
   io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
   
@@ -33,7 +37,7 @@ void HariMain(void)
   //mouse init
   enable_mouse(&mdec);
 
-  unsigned int memtotal, counter = 0;//memtotal memory 总数,counter 计数器
+  unsigned int memtotal;//memtotal memory 总数
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
 
   memtotal = memtest(0x00400000, 0xbfffffff);//获取内存真实的大小
@@ -90,7 +94,7 @@ void HariMain(void)
 
     io_cli();
     
-    if (0 == fifo8_status(&keyfifo) + fifo8_status(&mousefifo)){
+    if (0 == fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo)){
       io_sti();
     } else {
       if (fifo8_status(&keyfifo) != 0) {
@@ -101,6 +105,12 @@ void HariMain(void)
 	boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
 	putfont8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
 	sheet_refresh(sht_back, 0, 16, 16, 32);
+      }
+      if (fifo8_status(&timerfifo) != 0) {
+	i = fifo8_get(&timerfifo);
+	io_sti();
+	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
+	sheet_refresh(sht_back, 0, 64, 56, 80);
       }
       if (fifo8_status(&mousefifo) != 0) {
 	i = fifo8_get(&mousefifo);

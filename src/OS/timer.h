@@ -3,6 +3,9 @@
 
 struct TIMERCTL{
   unsigned int count;
+  unsigned int timeout;
+  struct FIFO8 *fifo;
+  unsigned char data;
 };
 
 void init_pit(void);
