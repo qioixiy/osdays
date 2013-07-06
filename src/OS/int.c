@@ -25,29 +25,30 @@ void init_pic(void)
 }
 
 //定义一个全局keyboard fifo
-struct FIFO8 keyfifo;
-
+struct FIFO32 *keyfifo;
+unsigned int keydata0;
 //keyboard int
 void inthandler21(int *esp)
 {
-  unsigned char data;
+  unsigned int data;
   io_out8(PIC0_OCW2, 0x61);//通知PIC IRQ-01已经受理完了
   data = io_in8(PORT_KEYDAT);
 
-  fifo8_put(&keyfifo, data);
+  fifo32_put(keyfifo, data+keydata0);
   return;
 }
 
-struct FIFO8 mousefifo;
+struct FIFO32 *mousefifo;
+unsigned int mousedata0;
 //mouse int
 void inthandler2c(int *esp)
 {
-  unsigned char data;
+  unsigned int data;
   io_out8(PIC1_OCW2, 0x64);//通知PIC1 IRQ-12处理已经完成
   io_out8(PIC0_OCW2, 0x62);//通知PIC0 IRQ-02处理已经完成
   
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(&mousefifo, data);
+  fifo32_put(mousefifo, data+mousedata0);
   
   return;
 }

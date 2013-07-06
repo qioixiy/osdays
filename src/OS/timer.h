@@ -4,7 +4,7 @@
 #define MAX_TIMER 500//×î¶àtimerÊý
 struct TIMER{
   unsigned int timeout, flags;
-  struct FIFO8 *fifo;
+  struct FIFO32 *fifo;
   unsigned char data;
 };
 
@@ -20,7 +20,7 @@ struct TIMERCTL{
 void init_pit(void);
 struct TIMER *timer_alloc(void);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
-void timer_init(struct TIMER *timer,struct FIFO8 *fifo, unsigned char data);
+void timer_init(struct TIMER *timer,struct FIFO32 *fifo, unsigned int data);
 extern struct TIMERCTL timerctl;
 
 #endif

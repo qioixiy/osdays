@@ -1,5 +1,6 @@
 #ifndef _KEYBOARD_H
 #define _KEYBOARD_H
+#include "fifo.h"
 
 //º¸≈Ã Û±Í…Ë÷√
 #define PORT_KEYDAT 0x0060
@@ -10,6 +11,6 @@
 #define KBC_MODE 0X47
 
 void wait_KBC_sendready(void);
-void init_keyboard(void);
+void init_keyboard(struct FIFO32 *fifo, int data0);
 
 #endif

@@ -1,7 +1,7 @@
 #include "fifo.h"
 
 //初始化FIFO buf
-void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf)
+void fifo32_init(struct FIFO32 *fifo, int size, unsigned int *buf)
 {
   fifo->size = size;
   fifo->buf = buf;
@@ -14,7 +14,7 @@ void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf)
 }
 
 //向fifo中保存数据
-int fifo8_put(struct FIFO8 *fifo, unsigned char data)
+unsigned int fifo32_put(struct FIFO32 *fifo, unsigned int data)
 {
   if (fifo->free == 0) {
     //没有空间，溢出
@@ -32,7 +32,7 @@ int fifo8_put(struct FIFO8 *fifo, unsigned char data)
   return 0;
 }
 
-int fifo8_get(struct FIFO8 *fifo)
+unsigned int fifo32_get(struct FIFO32 *fifo)
 {
   int data;
 
@@ -51,7 +51,7 @@ int fifo8_get(struct FIFO8 *fifo)
 }
 
 //计算保存有多少数据
-int fifo8_status(struct FIFO8 *fifo)
+int fifo32_status(struct FIFO32 *fifo)
 {
   return fifo->size - fifo->free;
 }

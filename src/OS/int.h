@@ -32,8 +32,6 @@ struct KEYBUF{
   int next_r, next_w, len;
 };
 
-extern struct FIFO8 keyfifo;
-extern struct FIFO8 mousefifo;
 /* int.h */
 void init_pic(void);
 void inthandler20(int *esp);
@@ -45,5 +43,10 @@ void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
+
+extern struct FIFO32 *keyfifo;
+extern struct FIFO32 *mousefifo;
+extern unsigned int keydata0;
+extern unsigned int mousedata0;
 
 #endif
