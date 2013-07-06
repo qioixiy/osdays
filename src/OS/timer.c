@@ -24,7 +24,7 @@ void init_pit(void)
   timerctl.count = 0;
   timerctl.next = 0xffffffff;
   for(i = 0; i<MAX_TIMER; i++) {
-    timerctl.timer[i].flags = TIMER_FLAGS_NOUSE;//未使用
+    timerctl.timers0[i].flags = TIMER_FLAGS_NOUSE;//未使用
   }
   return;
 }
@@ -33,9 +33,9 @@ struct TIMER *timer_alloc(void)
 {
   int i;
   for(i = 0; i < MAX_TIMER; i++){
-    if (timerctl.timer[i].flags == TIMER_FLAGS_NOUSE) {
-      timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
-      return &timerctl.timer[i];
+    if (timerctl.timers0[i].flags == TIMER_FLAGS_NOUSE) {
+      timerctl.timers0[i].flags = TIMER_FLAGS_ALLOC;
+      return &timerctl.timers0[i];
     }
   }
   return 0;
@@ -55,36 +55,60 @@ void timer_init(struct TIMER *timer,struct FIFO8 *fifo, unsigned char data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
+  int e, i, j;
   timer->timeout = timeout + timerctl.count;
   timer->flags = TIMER_FLAGS_USING;
-  if (timerctl.next > timer->timeout) {
-    timerctl.next = timer->timeout;
+  e = io_load_eflags();
+  io_cli();
+  //搜索注册位置
+  for (i = 0; i < MAX_TIMER; i++) {
+    if (timerctl.timers[i]->timeout >= timer->timeout) {
+      break;
+    }
   }
+  
+  //i之后的向后移动
+  for (j = timerctl.using; j > i; j--) {
+    timerctl.timers[j] = timerctl.timers[j - 1];
+  }
+  
+  timerctl.using++;
+  //插入到空位
+  timerctl.timers[i] = timer;
+  timerctl.next = timerctl.timers[0]->timeout;
+  
+  io_store_eflags(e);
   return;
 }
 
 void inthandler20(int *esp)
 {
-  int i;
+  int i, j;
   io_out8(PIC0_OCW2, 0X60);//把IRQ-00信号接收完了的信息通知给PIC
   timerctl.count++;
   if (timerctl.count < timerctl.next) {
     return ;//还不到下一时刻
   }
   
-  timerctl.next = 0xffffffff;
-  for(i = 0; i < MAX_TIMER; i++) {
-    if (timerctl.timer[i].flags == TIMER_FLAGS_USING ){//如果设定了超时
-      if (timerctl.timer[i].timeout <= timerctl.count) {//超时已经到
-	timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
-	fifo8_put(timerctl.timer[i].fifo, timerctl.timer[i].data);
-      } else {
-	//没有超时发生
-	if (timerctl.next > timerctl.timer[i].timeout) {
-	  timerctl.next = timerctl.timer[i].timeout;
-	}
-      }
+  for (i = 0; i < timerctl.using; i++) {
+    //timer都是USING 状态不需要确认
+    if (timerctl.timers[i]->timeout > timerctl.count) {
+      break;
     }
+    //超时
+    timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
+    fifo8_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+  }
+  
+  //有i个定时器超时
+  timerctl.using -= i;
+  for (j = 0; j < timerctl.using; j++) {
+    timerctl.timers[j] = timerctl.timers[i+j];
+  }
+  if (timerctl.using > 0) {
+    timerctl.next = timerctl.timers[0]->timeout;
+  } else {
+    timerctl.next = 0xffffffff;
   }
   return;
 }
@@ -98,8 +122,8 @@ void timer_adjust(void)
   
   timerctl.count -= t0;
   for (i = 0; i < MAX_TIMER; i++) {
-    if (timerctl.timer[i].flags == TIMER_FLAGS_USING) {
-      timerctl.timer[i].timeout -= t0;
+    if (timerctl.timers0[i].flags == TIMER_FLAGS_USING) {
+      timerctl.timers0[i].timeout -= t0;
     }
   }
   io_sti();
