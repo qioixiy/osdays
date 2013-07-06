@@ -34,7 +34,6 @@ void init_pit(void)
   t->next = 0;
   timerctl.t0 = t;//因为现在只有此哨兵timer
   timerctl.next = 0xffffffff;//下一个超时时刻就是0xffffffff
-  timerctl.using = 1;
   
   return;
 }
@@ -73,7 +72,6 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
   timer->flags = TIMER_FLAGS_USING;
   e = io_load_eflags();
   io_cli();
-  timerctl.using++;
 
   t = timerctl.t0;
   if (timer->timeout <= t->timeout) {//如果是最近的定时器，放在最前面
@@ -103,15 +101,15 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 
 void inthandler20(int *esp)
 {
-  int i;
   struct TIMER *timer;
   io_out8(PIC0_OCW2, 0X60);//把IRQ-00信号接收完了的信息通知给PIC
   timerctl.count++;
   if (timerctl.count < timerctl.next) {
     return ;//还不到下一时刻
   }
+
   timer = timerctl.t0;//首先把最前面的地址给timer
-  for (i = 0; i < timerctl.using; i++) {
+  for (;;) {
     //timer都是USING 状态不需要确认
     if (timer->timeout > timerctl.count) {
       break;
@@ -121,9 +119,7 @@ void inthandler20(int *esp)
     fifo32_put(timer->fifo, timer->data);
     timer = timer->next;//指向下一个定时器
   }
-  //有i个定时器超时
-  timerctl.using -= i;
-  //新移位
+  
   timerctl.t0 = timer;
   //timer next 设定
   timerctl.next = timerctl.t0->timeout;
