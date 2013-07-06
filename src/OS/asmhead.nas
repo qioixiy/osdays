@@ -15,13 +15,13 @@ VRAM	EQU 0X0FF8 	;图像缓冲区的开始位置
 
 ;编译后的文件放在0X4200处，在内存的位置为0X8000+0X4200=0XC200
 	ORG 0XC200	;程序要装载的内存位置
-	MOV BX, 0X4101	;vga显卡， 320×200×8位彩色
+	MOV BX, 0X4105	;vga显卡， 320×200×8位彩色
 	MOV AX, 0X4F02
 	INT 0X10
 	
 	MOV BYTE [VMODE], 8	;记录画面模式
-	MOV WORD [SCRNX], 640
-	MOV WORD [SCRNY], 480
+	MOV WORD [SCRNX], 1024
+	MOV WORD [SCRNY], 768
 	MOV DWORD [VRAM], 0Xe0000000;VRAM从0xa000-0xafff的64K
 
 ;用bios取得键盘上各种LED指示灯的状态
