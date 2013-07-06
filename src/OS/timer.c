@@ -26,6 +26,16 @@ void init_pit(void)
   for(i = 0; i<MAX_TIMER; i++) {
     timerctl.timers0[i].flags = TIMER_FLAGS_NOUSE;//未使用
   }
+  
+  struct TIMER *t;
+  t = timer_alloc();
+  t->timeout = 0xffffffff;
+  t->flags = TIMER_FLAGS_USING;
+  t->next = 0;
+  timerctl.t0 = t;//因为现在只有此哨兵timer
+  timerctl.next = 0xffffffff;//下一个超时时刻就是0xffffffff
+  timerctl.using = 1;
+  
   return;
 }
 
@@ -55,6 +65,7 @@ void timer_init(struct TIMER *timer,struct FIFO32 *fifo, unsigned int data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
+  //由于加入哨兵timer，插入timer只能在最前面或者中间
   int e;
   struct TIMER *s, *t;
   
@@ -63,14 +74,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
   e = io_load_eflags();
   io_cli();
   timerctl.using++;
-  if (timerctl.using == 1) {//只有一个运行的定时器
-    timerctl.t0 = timer;
-    timer->next = 0;//没有下一个
-    timerctl.next = timer->timeout;
-    io_store_eflags(e);
-    return;
-  }
-  
+
   t = timerctl.t0;
   if (timer->timeout <= t->timeout) {//如果是最近的定时器，放在最前面
     timerctl.t0 = timer;
@@ -95,16 +99,11 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
       return;
     }
   }
-  //插入最后
-  s->next = timer;
-  timer->next = 0;
-  io_store_eflags(e);
-  return;
 }
 
 void inthandler20(int *esp)
 {
-  int i, j;
+  int i;
   struct TIMER *timer;
   io_out8(PIC0_OCW2, 0X60);//把IRQ-00信号接收完了的信息通知给PIC
   timerctl.count++;
@@ -127,11 +126,7 @@ void inthandler20(int *esp)
   //新移位
   timerctl.t0 = timer;
   //timer next 设定
-  if (timerctl.using > 0) {
-    timerctl.next = timerctl.t0->timeout;
-  } else {
-    timerctl.next = 0xffffffff;
-  }
+  timerctl.next = timerctl.t0->timeout;
   return;
 }
 
@@ -140,11 +135,12 @@ void timer_adjust(void)
 {
   int t0 = timerctl.count;
   int i = 0;
-  io_cli();
+  io_cli();//禁止中断
   
   timerctl.count -= t0;
   for (i = 0; i < MAX_TIMER; i++) {
     if (timerctl.timers0[i].flags == TIMER_FLAGS_USING) {
+      if (timerctl.timers0[i].timeout != 0xffffffff)
       timerctl.timers0[i].timeout -= t0;
     }
   }
