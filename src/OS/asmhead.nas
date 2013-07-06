@@ -1,6 +1,8 @@
 ;haribote-os boot asm
 ;TAB=4
 
+[INSTRSET "i486p"];EAX
+
 BOTPAK	EQU 0X00280000
 DSKCAC	EQU 0X00100000
 DSKCAC0 EQU 0X00008000
@@ -12,18 +14,71 @@ VMODE	EQU 0X0FF2	;关于颜色数目的信息
 SCRNX	EQU 0X0FF4	;分辨率的X
 SCRNY	EQU 0X0FF6	;分辨率的Y
 VRAM	EQU 0X0FF8 	;图像缓冲区的开始位置
+FNAME 	EQU 0xA600  	;镜像中文件name
 
+;	0x100 :  640 x  400 x 8bit
+;	0x101 :  640 x  480 x 8bit
+;	0x103 :  800 x  600 x 8bit
+;	0x105 : 1024 x  768 x 8bit
+;	0x107 : 1280 x 1024 x 8bit
+
+VBEMODE EQU 0X103
 ;编译后的文件放在0X4200处，在内存的位置为0X8000+0X4200=0XC200
-	ORG 0XC200	;程序要装载的内存位置
-	MOV BX, 0X4101	;vga显卡， 320×200×8位彩色
-	MOV AX, 0X4F02
-	INT 0X10
-	
-	MOV BYTE [VMODE], 8	;记录画面模式
-	MOV WORD [SCRNX], 640
-	MOV WORD [SCRNY], 480
-	MOV DWORD [VRAM], 0Xe0000000;VRAM从0xa000-0xafff的64K
+;程序装载的位置
+	org 0xc200	 	
 
+;判断是否存在VBE支持
+	mov ax, 0x9000
+	mov es, ax
+	mov di, 0
+	mov ax, 0x4f00
+	int 0x10
+	cmp ax, 0x004f
+	jne scrn320
+;检查VBE的版本
+	mov ax, [es:di+4]
+	cmp ax, 0x0200
+	jb scrn320
+
+;取得画面模式信息
+	mov cx, VBEMODE
+	mov ax, 0x4f01
+	int 0x10
+	cmp ax, 0x004f
+	jne scrn320
+
+;画面模式的确认
+	cmp byte [es:di+0x19], 8
+	jne scrn320
+	cmp byte [es:di+0x1b], 4
+	jne scrn320
+	mov ax, [es:di+0x00]
+	and ax, 0x0080
+	jz scrn320	;模式属性的bit7是0，所以放弃
+
+;画面模式的切换
+	mov bx, VBEMODE+0x4000
+	mov ax, 0x4f02
+	int 0x10
+	mov byte [VMODE], 8 ;记下画面模式
+	mov ax, [es:di+0x12]
+	mov [SCRNX], ax
+	mov ax, [es:di+0x14]
+	mov [SCRNY], ax
+	mov eax, [es:di+0x28]
+	mov [VRAM], eax
+	jmp keystatus
+
+scrn320:
+	mov al, 0x13 	;vga显卡设置，320x200x8位彩色
+	mov ah, 0x00 	;
+	int 0x10
+	mov byte[VMODE], 8	;记录画面模式
+	mov	word[SCRNX], 320
+	mov	word[SCRNY], 200
+	mov dword[VRAM],0x000a0000
+
+keystatus:
 ;用bios取得键盘上各种LED指示灯的状态
 	MOV AH, 0X02
 	INT 0X16	;keyboard bios
