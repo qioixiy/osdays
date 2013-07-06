@@ -26,17 +26,19 @@ void HariMain(void)
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
 
   fifo8_init(&timerfifo, sizeof(timerbuf), timerbuf);
-  timer = timer_alloc();
-  timer_init(timer, &timerfifo, 10);
-  timer_settime(timer, 1000);
-
   fifo8_init(&timerfifo, sizeof(timerbuf2), timerbuf2);
-  timer2 = timer_alloc();
-  timer_init(timer2, &timerfifo, 3);
-  timer_settime(timer2, 300);
   fifo8_init(&timerfifo, sizeof(timerbuf3), timerbuf3);
+
+  timer = timer_alloc();
+  timer2 = timer_alloc();
   timer3 = timer_alloc();
+
+  timer_init(timer, &timerfifo, 10);
+  timer_init(timer2, &timerfifo, 3);
   timer_init(timer3, &timerfifo, 1);
+
+  timer_settime(timer, 1000); 
+  timer_settime(timer2, 300);
   timer_settime(timer3, 50);
   
   io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
@@ -45,15 +47,12 @@ void HariMain(void)
   init_keyboard();
   
   init_palette();
-  init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
-  init_mouse_cursor8(mcursor, COL8_008484);  
-  
+   
   //mouse init
   enable_mouse(&mdec);
 
   unsigned int memtotal;//memtotal memory 总数
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
-
   memtotal = memtest(0x00400000, 0xbfffffff);//获取内存真实的大小
   memman_init(memman);
   memman_free(memman, 0x00001000, 0x0009e000);
