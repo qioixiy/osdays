@@ -3,6 +3,7 @@
 
 #define MAX_TIMER 500//最多timer数
 struct TIMER{
+  struct TIMER *next;
   unsigned int timeout, flags;
   struct FIFO32 *fifo;
   unsigned char data;
@@ -12,7 +13,7 @@ struct TIMERCTL{
   unsigned int count;
   unsigned int next;//timer下一个
   unsigned int using;
-  struct TIMER *timers[MAX_TIMER];
+  struct TIMER *t0;
   struct TIMER timers0[MAX_TIMER];
 };
 
