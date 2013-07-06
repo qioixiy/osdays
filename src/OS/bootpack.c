@@ -124,8 +124,6 @@ void HariMain(void)
 	  putfont8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
 	  sheet_refresh(sht_back, 32,16, 32+15*8,32);
 
-	  //鼠标指针的移动
-	  boxfill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 15, my + 15);//隐藏鼠标
 	  //计算鼠标新的位置
 	  mx += mdec.x;
 	  my += mdec.y;
@@ -145,8 +143,8 @@ void HariMain(void)
 	  boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79, 15);//隐藏坐标
 	  putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);//显示坐标
 	  sheet_refresh(sht_back, 0, 0, 80, 16);
+	 
 	  //滑动鼠标显示，包含sheet_reflush
-
 	  sheet_slide(sht_mouse, mx, my);
 	}
       }
