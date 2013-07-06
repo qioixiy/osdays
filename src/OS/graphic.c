@@ -1,4 +1,5 @@
 #include "graphic.h"
+#include "sheet.h"
 
 void init_screen8(unsigned char *vram, int xsize, int ysize)
 {
@@ -134,6 +135,14 @@ void putfont8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *st
     putfont8(vram, xsize, x, y, c, hankaku + *str * 16);
     x += 8;
   }
+  return;
+}
+
+void putfont8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int len)
+{
+  boxfill8(sht->buf, sht->bxsize, b, x, y, x + len*8 - 1, y+15);
+  putfont8_asc(sht->buf, sht->bxsize, x, y, c, s);
+  sheet_refresh(sht, x, y, x + len*8, y+ 16);
   return;
 }
 

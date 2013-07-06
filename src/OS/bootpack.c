@@ -101,10 +101,8 @@ void HariMain(void)
  
   for (;;) {
     sprintf(s, "%010d", timerctl.count);
-    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
-    putfont8_asc(buf_win, 160, 40, 28, COL8_000000, s);
-    sheet_refresh(sht_win, 40, 28, 120, 44);
-
+    putfont8_asc_sht(sht_win, 40, 28,COL8_000000, COL8_C6C6C6, s, strlen(s));
+   
     io_cli();
     
     if (0 == fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + 
@@ -118,9 +116,7 @@ void HariMain(void)
 	io_sti();
 
 	sprintf(s, "%02X", i);
-	boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-	putfont8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-	sheet_refresh(sht_back, 0, 16, 16, 32);
+	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
       }
       if (fifo8_status(&timerfifo) != 0) {
 	i = fifo8_get(&timerfifo);
@@ -166,10 +162,8 @@ void HariMain(void)
 	    s[2] = 'C';
 	  } 
 	  
-	  boxfill8(buf_back, binfo->scrnx, COL8_008484, 32, 16, 32 + 15*8 - 1, 31);
-	  putfont8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-	  sheet_refresh(sht_back, 32,16, 32+15*8,32);
-
+	  putfont8_asc_sht(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
+	  
 	  //计算鼠标新的位置
 	  mx += mdec.x;
 	  my += mdec.y;
@@ -186,9 +180,7 @@ void HariMain(void)
 	    my = binfo->scrny - 1;
 	  }
 	  sprintf(s, "(%3d, %3d)", mx, my);
-	  boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79, 15);//隐藏坐标
-	  putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);//显示坐标
-	  sheet_refresh(sht_back, 0, 0, 80, 16);
+	  putfont8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, strlen(s));
 	 
 	  //滑动鼠标显示，包含sheet_reflush
 	  sheet_slide(sht_mouse, mx, my);

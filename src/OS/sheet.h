@@ -1,5 +1,6 @@
 #ifndef _SHEET_H
 #define _SHEET_H
+#include "memory.h"
 
 struct SHEET{
   unsigned char *buf;
