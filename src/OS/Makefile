@@ -18,7 +18,7 @@ COPY     = $(TOOLPATH)copy
 DEL      = $(TOOLPATH)del
 
 OBJS	 = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj \
-	mouse.obj keyboard.obj memory.obj sheet.obj window.obj
+	mouse.obj keyboard.obj memory.obj sheet.obj window.obj timer.obj
 
 
 default:
@@ -49,13 +49,13 @@ bootpack.bim: $(OBJS) Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map $(OBJS)
 
 #3MB+64KB=3136KB
-bootpack.hrb: bootpack.bim Makefile
+bootpack.hrb: bootpack.bim Makefile 
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
 
-haribote.sys: asmhead.bin bootpack.hrb Makefile
+haribote.sys: asmhead.bin bootpack.hrb Makefile $(OBJS)
 	copy /B asmhead.bin+bootpack.hrb haribote.sys
 
-haribote.img : ipl10.bin haribote.sys Makefile
+haribote.img : ipl10.bin haribote.sys Makefile $(OBJS)
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
 	wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	copy from:haribote.sys to:@: \

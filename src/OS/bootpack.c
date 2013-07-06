@@ -19,8 +19,9 @@ void HariMain(void)
 
   fifo8_init(&keyfifo, sizeof(keybuf), keybuf);
   fifo8_init(&mousefifo, sizeof(mousebuf), mousebuf);
-  
-  io_out8(PIC0_IMR, 0xf9); /* PIC1打开中断(11111001) */
+
+  init_pit();  
+  io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
   
   init_keyboard();

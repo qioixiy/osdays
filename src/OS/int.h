@@ -36,10 +36,12 @@ extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 /* int.h */
 void init_pic(void);
+void inthandler20(int *esp);
 void inthandler21(int *esp);
 void inthandler27(int *esp);
 void inthandler2c(int *esp);
 //naskfunc.nas
+void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);

@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "sheet.h"
 #include "window.h"
+#include "timer.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
