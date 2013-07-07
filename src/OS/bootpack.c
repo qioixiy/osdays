@@ -10,6 +10,8 @@ static char keytable[0x54] = {
   '2', '3', '0', '.'
 };
 
+struct TSS32 tss_a, tss_b;
+
 void HariMain(void)
 {
   //bootinfo struct pointer
