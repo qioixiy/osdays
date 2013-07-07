@@ -21,4 +21,5 @@ void store_cr0(int cr0);
 void load_tr(int tr);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 
+void taskswitch(void);
 #endif
