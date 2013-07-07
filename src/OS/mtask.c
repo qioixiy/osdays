@@ -85,3 +85,10 @@ struct TASK *task_alloc(void)
   return 0;
 }
 
+void task_run(struct TASK *task)
+{
+  task->flags = 2;//置为运行状态
+  taskctl->tasks[taskctl->running] = task;
+  taskctl->running++;//运行任务数加1
+  return;
+}
