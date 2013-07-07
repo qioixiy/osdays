@@ -112,13 +112,21 @@ void HariMain(void)
       if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
-	if (i < 0x54 + 256) {
-	  if (keytable[i-256] != 0) {
+	if (i < 0x54 + 256) {//一般数据
+	  if (keytable[i-256] != 0 && cursor_x < 144) {
 	    s[0] = keytable[i-256];
 	    s[1] = 0;
-	    putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
+	    putfont8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, strlen(s));
+	    cursor_x += 8;
 	  }
 	}
+	if (i == 256+0x0e && cursor_x > 8) {//退格键
+	  putfont8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+	  cursor_x -= 8;
+	}
+	//光标再显示
+	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,cursor_x+7, 43);
+	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
 	if (mouse_decode(&mdec, i-512) != 0) {
