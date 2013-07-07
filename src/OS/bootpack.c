@@ -90,12 +90,10 @@ void HariMain(void)
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
  
-  int count = 0;
   for (;;) {
-    count++;
     io_cli();
     if (0 == fifo32_status(&fifo)){
-      io_sti();
+      io_stihlt();
     } else {
       i = fifo32_get(&fifo);
       io_sti();
@@ -142,12 +140,9 @@ void HariMain(void)
       } else if (10 == i) {//10s timer
 	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
 	sheet_refresh(sht_back, 0, 64, 56, 80);
-	sprintf(s, "%010d", count);
-	putfont8_asc_sht(sht_win, 40, 28,COL8_000000, COL8_C6C6C6, s, strlen(s));
       } else if (3 == i){//3s timer
 	putfont8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
 	sheet_refresh(sht_back, 0, 80, 48, 96);
-	count = 0;
       } else if(1 == i) {//I1
 	timer_init(timer3, &fifo, 0);//ÉèÖÃÎª0
 	boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
