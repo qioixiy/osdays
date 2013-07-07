@@ -16,18 +16,23 @@ struct TSS32 tss_a, tss_b;
 void task_b_main(struct SHEET *sht_back)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer_ts, *timer_put;
+  struct TIMER *timer_ts, *timer_put, *timer_1s;
   int i, fifobuf[128];
   int count = 0;
+  int count0 = 0;
   char s[12];
  
   fifo32_init(&fifo, 128, fifobuf);
+
   timer_ts = timer_alloc();
   timer_put = timer_alloc();
+  timer_1s = timer_alloc();
   timer_init(timer_ts, &fifo, 2);
   timer_init(timer_put, &fifo, 1);
+  timer_init(timer_1s, &fifo, 100);
   timer_settime(timer_ts, 2);
   timer_settime(timer_put, 1);
+  timer_settime(timer_1s, 100);
 
   for (;;) {
     count++;
@@ -44,10 +49,13 @@ void task_b_main(struct SHEET *sht_back)
 	timer_settime(timer_ts, 2);
       } else if (1 == i) {
 	sprintf(s, "%11d", count);
-	putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 10);
+	putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
 	timer_settime(timer_put, 1);
-      } else {
-	
+      } else if (100 == i){
+	sprintf(s, "%11d", count - count0);
+	putfont8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+	count0 = count;
+	timer_settime(timer_1s, 100);
       }
     }
   }
