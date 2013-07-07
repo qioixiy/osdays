@@ -13,35 +13,41 @@ static char keytable[0x54] = {
 
 struct TSS32 tss_a, tss_b;
 
-void task_b_main(void)
+void task_b_main(struct SHEET *sht_back)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer_ts;
+  struct TIMER *timer_ts, *timer_put;
   int i, fifobuf[128];
   int count = 0;
-  char s[11];
-  struct SHEET *sht_back;
-  sht_back = (struct SHEET *)(*((int *)0x0fec));
-
+  char s[12];
+ 
   fifo32_init(&fifo, 128, fifobuf);
   timer_ts = timer_alloc();
-  timer_init(timer_ts, &fifo, 1);
+  timer_put = timer_alloc();
+  timer_init(timer_ts, &fifo, 2);
+  timer_init(timer_put, &fifo, 1);
   timer_settime(timer_ts, 2);
+  timer_settime(timer_put, 1);
 
   for (;;) {
     count++;
-    sprintf(s, "%10d", count);
-    putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 10);
 
     io_cli();
     if (fifo32_status(&fifo) == 0) {
-      io_stihlt();
+      io_sti();
     } else {
       i = fifo32_get(&fifo);
       io_sti();
-      if (1 == i) {//任务超时
+      
+      if (2 == i) {//任务超时
 	farjmp(0, 3*8);
 	timer_settime(timer_ts, 2);
+      } else if (1 == i) {
+	sprintf(s, "%11d", count);
+	putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 10);
+	timer_settime(timer_put, 1);
+      } else {
+	
       }
     }
   }
@@ -144,6 +150,7 @@ void HariMain(void)
   //esp_b
   int task_b_esp;
   task_b_esp = memman_alloc_4k(memman, 64*1024) + 64*1024;
+  *((int *)(task_b_esp + 4)) = (int)sht_back;
   //task
   tss_a.ldtr = 0;
   tss_a.iomap = 0x40000000;
@@ -165,7 +172,6 @@ void HariMain(void)
   tss_b.ds = 1*8;
   tss_b.fs = 1*8;
   tss_b.gs = 1*8;
-  *((int *)0x0fec) = (int)sht_back;
 
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
   set_segmdesc(gdt+3, 103,(int)&tss_a, AR_TSS32);//段长限制为103字节
