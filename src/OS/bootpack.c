@@ -163,6 +163,10 @@ void HariMain(void)
 	  
 	  //滑动鼠标显示，包含sheet_reflush
 	  sheet_slide(sht_mouse, mx, my);
+	  
+	  if ((mdec.btn & 0x01) != 0) {//鼠标左键按
+	    sheet_slide(sht_win, mx-80, my-8);
+	  }
 	}
       } else if (10 == i) {//10s timer
 	putfont8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
@@ -172,15 +176,9 @@ void HariMain(void)
 	if(1 == i) {//I1
 	  timer_init(timer3, &fifo, 0);//设置为0
 	  cursor_c = COL8_000000;
-	  //boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
-	  //timer_settime(timer3, 50);
-	  //sheet_refresh(sht_back, 8, 96, 16, 112);
 	} else if(0 == i){
 	  timer_init(timer3, &fifo, 1);//设置为1
 	  cursor_c = COL8_FFFFFF;
-	  //boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111); 
-	  //timer_settime(timer3, 50);
-	  //sheet_refresh(sht_back, 8, 96, 16, 112);
 	}
 	timer_settime(timer3, 50);
 	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43); 
