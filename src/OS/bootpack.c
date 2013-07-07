@@ -20,7 +20,7 @@ void task_b_main(struct SHEET *sht_back)
   int count0 = 0;
   char s[12];
  
-  fifo32_init(&fifo, 128, fifobuf);
+  fifo32_init(&fifo, 128, fifobuf, 0);
 
   timer_put = timer_alloc();
   timer_1s = timer_alloc();
@@ -74,7 +74,7 @@ void HariMain(void)
 
   struct FIFO32 fifo;
   unsigned int fifobuf[128];
-  fifo32_init(&fifo, sizeof(fifobuf)/sizeof(fifobuf[0]), fifobuf);
+  fifo32_init(&fifo, sizeof(fifobuf)/sizeof(fifobuf[0]), fifobuf, 0);
 
   timer = timer_alloc();
   timer2 = timer_alloc();
@@ -143,9 +143,11 @@ void HariMain(void)
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
   
+  struct TASK *task_a;
+  task_a = task_init(memman);
+  fifo.task = task_a;
   //task_b
   struct TASK *task_b;
-  task_init(memman);
   task_b = task_alloc();//·ÖÅäÒ»¸ötask struct
   task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
   task_b->tss.eip = (int)&task_b_main;
@@ -163,6 +165,7 @@ void HariMain(void)
   for (;;) {
     io_cli();
     if (0 == fifo32_status(&fifo)){
+      task_sleep(task_a);
       io_sti();
     } else {
       i = fifo32_get(&fifo);

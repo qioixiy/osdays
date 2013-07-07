@@ -1,7 +1,7 @@
 #include "fifo.h"
 
 //初始化FIFO buf
-void fifo32_init(struct FIFO32 *fifo, int size, unsigned int *buf)
+void fifo32_init(struct FIFO32 *fifo, int size, unsigned int *buf, struct TASK *task)
 {
   fifo->size = size;
   fifo->buf = buf;
@@ -9,7 +9,8 @@ void fifo32_init(struct FIFO32 *fifo, int size, unsigned int *buf)
   fifo->flags = 0;
   fifo->p = 0;
   fifo->q = 0;
-
+  
+  fifo->task = task;//有数据输入需要唤醒的task
   return;
 }
 
@@ -24,9 +25,17 @@ unsigned int fifo32_put(struct FIFO32 *fifo, unsigned int data)
 
   fifo->buf[fifo->p] = data;
   fifo->p++;
-  fifo->free--;
+
   if (fifo->p == fifo->size) {
     fifo->p = 0;
+  }
+  fifo->free--;
+  
+  //fifo相关的任务处理
+  if (fifo->task != 0) {
+    if (fifo->task->flags != 2) {//如果任务不处于运行状态
+      task_run(fifo->task);//将任务唤醒
+    }
   }
  
   return 0;
