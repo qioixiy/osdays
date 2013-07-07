@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "bootpack.h"
 
 static char keytable[0x54] = {
@@ -16,7 +17,7 @@ void HariMain(void)
 {
   //bootinfo struct pointer
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-  char s[50], mcursor[256];
+  char s[50];
   struct TIMER *timer, *timer2, *timer3;
 
   int mx, my;

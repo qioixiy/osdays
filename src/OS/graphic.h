@@ -1,5 +1,6 @@
 #ifndef _GARPHIC_H
 #define _GARPHIC_H
+#include "sheet.h"
 
 //naskinfo.nas
 void io_hlt(void);//ÔÝÍ£ÏµÍ³
@@ -21,6 +22,7 @@ void putfont8(unsigned char *vram, //display a char
 	      int xsize, int x, int y, 
 	      char color, char *font);
 void putfont8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *str);//put string
+void putfont8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int len);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
