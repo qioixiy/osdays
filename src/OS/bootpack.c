@@ -78,8 +78,9 @@ void HariMain(void)
   
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);//背景色号99
-  make_window8(buf_win, 160, 52, "counter");//
- 
+  make_window8(sht_win->buf, 160, 52, "window");//
+  make_textbox8(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
+
   sheet_slide(sht_back, 0, 0);//移动背景图层，同时显示出来
   sheet_slide(sht_win, 80, 72);
   //鼠标初始位置

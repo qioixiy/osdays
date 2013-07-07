@@ -1,6 +1,7 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
+#include "sheet.h"
 
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title);
-
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
 #endif
