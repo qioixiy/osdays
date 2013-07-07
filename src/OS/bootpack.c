@@ -111,17 +111,9 @@ void HariMain(void)
   make_window8(sht_win->buf, 144, 52, "window", 1);//
   make_textbox8(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 
-  sheet_slide(sht_back, 0, 0);//移动背景图层，同时显示出来
-  sheet_slide(sht_win, 80, 72);
   //鼠标初始位置
   mx = (binfo->scrnx - 16) / 2;
   my = (binfo->scrny - 16) / 2;
-  
-  sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
-  //
-  sheet_updown(sht_back, 0);
-  sheet_updown(sht_win, 1);
-  sheet_updown(sht_mouse, 2);
   
   sprintf(s, "(%3d, %3d)", mx, my);
   putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
@@ -130,6 +122,7 @@ void HariMain(void)
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
   
+  //task_a
   struct TASK *task_a;
   task_a = task_init(memman);
   fifo.task = task_a;
@@ -162,7 +155,7 @@ void HariMain(void)
   sheet_slide(sht_win_b[1], 8, 116);
   sheet_slide(sht_win_b[2], 168, 116);
   sheet_slide(sht_win, 8, 56);
-  sheet_slide(sht_mouse, mx, my);
+  sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
 
   sheet_updown(sht_back, 0);
   sheet_updown(sht_win_b[0], 1);
@@ -173,7 +166,7 @@ void HariMain(void)
 
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
-
+  
   for (;;) {
     io_cli();
     if (0 == fifo32_status(&fifo)){
