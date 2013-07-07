@@ -36,6 +36,7 @@ struct TASK *task_init(struct MEMMAN *memman)
 struct TASK *task_alloc(void)
 {
   int i;
+
   struct TASK *task;
   for (i = 0; i < MAX_TASKS; i++) {
     if (taskctl->tasks0[i].flags == 0) {//未使用的task结构
@@ -80,4 +81,39 @@ void task_switch(void)
     farjmp(0, taskctl->tasks[taskctl->now]->sel);
   }
   return ;
+}
+
+
+void task_sleep(struct TASK *task)
+{
+  int i;
+  char ts = 0;
+  if (task->flags == 2) {//如果指定的任务处于运行状态
+    if (task == taskctl->tasks[taskctl->now]) {//如果睡眠的是当前的task,需要进行任务切换
+      ts = 1;
+    }
+    //寻找task的位置
+    for (i = 0; i < MAX_TASKS; i++) {
+      if (task == taskctl->tasks[i]) {
+	break;
+      }
+    }
+    taskctl->running--;
+    if (i < taskctl->now) {
+      taskctl->now--;
+    }
+    //移动成员
+    for (; i < taskctl->running; i++) {
+      taskctl->tasks[i] = taskctl->tasks[i+1];
+    }
+    task->flags = 1;//置为不运行状态
+    if (ts != 0) {
+      //任务切换
+      if (taskctl->now >= taskctl->running) {//异常，修正
+	taskctl->now = 0;
+      }
+      farjmp(0, taskctl->tasks[taskctl->now]->sel);
+    }
+  }
+  return;
 }
