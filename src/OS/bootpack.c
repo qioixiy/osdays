@@ -16,13 +16,13 @@ struct TSS32 tss_a, tss_b;
 void task_b_main(void)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer;
+  struct TIMER *timer_ts;
   int i, fifobuf[128];
   
   fifo32_init(&fifo, 128, fifobuf);
-  timer = timer_alloc();
-  timer_init(timer, &fifo, 1);
-  timer_settime(timer, 500);
+  timer_ts = timer_alloc();
+  timer_init(timer_ts, &fifo, 1);
+  timer_settime(timer_ts, 2);
 
   for (;;) {
     io_cli();
@@ -31,8 +31,9 @@ void task_b_main(void)
     } else {
       i = fifo32_get(&fifo);
       io_sti();
-      if (1 == i) {//5s超时到
-	taskswitch3();
+      if (1 == i) {//任务超时
+	farjmp(0, 3*8);
+	timer_settime(timer_ts, 2);
       }
     }
   }
@@ -44,6 +45,7 @@ void HariMain(void)
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50];
   struct TIMER *timer, *timer2, *timer3;
+  struct TIMER *timer_ts;
 
   int mx, my;
   unsigned int i;
@@ -64,12 +66,15 @@ void HariMain(void)
   timer = timer_alloc();
   timer2 = timer_alloc();
   timer3 = timer_alloc();
+  timer_ts = timer_alloc();
   timer_init(timer, &fifo, 10);
   timer_init(timer2, &fifo, 3);
   timer_init(timer3, &fifo, 1);
+  timer_init(timer_ts, &fifo, 2);//任务切换用
   timer_settime(timer, 1000); 
   timer_settime(timer2, 300);
   timer_settime(timer3, 50);
+  timer_settime(timer_ts, 2);
   
   io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
@@ -168,7 +173,10 @@ void HariMain(void)
     } else {
       i = fifo32_get(&fifo);
       io_sti();
-      if (256 <= i && i <= 511) {//键盘数据
+      if (2 == i) {
+	farjmp(0, 4*8);
+	timer_settime(timer_ts, 2);
+      } else if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
 	if (i < 0x54 + 256) {//一般数据
@@ -229,7 +237,6 @@ void HariMain(void)
 	}
       } else if (10 == i) {//10s timer
 	putfont8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
-	taskswitch4();
       } else if (3 == i){//3s timer
 	putfont8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
       } else if (i <= 1) {

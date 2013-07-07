@@ -204,12 +204,7 @@ mts_fin:
 	POP EDI
 	RET
 
-	GLOBAL _taskswitch4
-_taskswitch4:			;void taskswitch4(void)
-	JMP 4*8:0
-	RET
-
-	GLOBAL _taskswitch3
-_taskswitch3:			;void taskswitch3(void)
-	JMP 3*8:0
+	GLOBAL _farjmp
+_farjmp:			;void farjmp(int eip, int cs)
+	JMP FAR [ESP+4]		;eip,cs
 	RET
