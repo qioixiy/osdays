@@ -14,7 +14,7 @@ static char keytable[0x54] = {
 void task_b_main(struct SHEET *sht_back)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer_put, *timer_1s;
+  struct TIMER *timer_1s;
   int i, fifobuf[128];
   int count = 0;
   int count0 = 0;
@@ -22,11 +22,8 @@ void task_b_main(struct SHEET *sht_back)
  
   fifo32_init(&fifo, 128, fifobuf, 0);
 
-  timer_put = timer_alloc();
   timer_1s = timer_alloc();
-  timer_init(timer_put, &fifo, 1);
   timer_init(timer_1s, &fifo, 100);
-  timer_settime(timer_put, 1);
   timer_settime(timer_1s, 100);
 
   for (;;) {
@@ -39,13 +36,9 @@ void task_b_main(struct SHEET *sht_back)
       i = fifo32_get(&fifo);
       io_sti();
       
-      if (1 == i) {
-	sprintf(s, "%11d", count);
-	putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
-	timer_settime(timer_put, 1);
-      } else if (100 == i){
+      if (100 == i){
 	sprintf(s, "%11d", count - count0);
-	putfont8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+	putfont8_asc_sht(sht_back, 24, 28, COL8_000000, COL8_C6C6C6, s, 11);
 	count0 = count;
 	timer_settime(timer_1s, 100);
       }
