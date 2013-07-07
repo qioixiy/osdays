@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+static char keytable[0x54] = {
+  0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
+  'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
+  'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
+  'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+  0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+  '2', '3', '0', '.'
+};
+
 void HariMain(void)
 {
   //bootinfo struct pointer
@@ -100,8 +109,12 @@ void HariMain(void)
       if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
-	if (0x1e + 256 == i) {
-	  putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, "A", 1);
+	if (i < 0x54 + 256) {
+	  if (keytable[i-256] != 0) {
+	    s[0] = keytable[i-256];
+	    s[1] = 0;
+	    putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
+	  }
 	}
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
