@@ -92,3 +92,16 @@ void task_run(struct TASK *task)
   taskctl->running++;//运行任务数加1
   return;
 }
+
+void task_switch(void)
+{
+  timer_settime(task_timer, 2);//重写task timer
+  if (taskctl->running >= 2) {//超过一个任务运行
+    taskctl->now++;
+    if (taskctl->now == taskctl->running) {//如果是最后一个，下次就选择第一个task
+      taskctl->now = 0;//轮询运行
+    }
+    farjmp(0, taskctl->tasks[taskctl->now]->sel);
+  }
+  return ;
+}
