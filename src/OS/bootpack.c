@@ -11,8 +11,6 @@ static char keytable[0x54] = {
   '2', '3', '0', '.'
 };
 
-struct TSS32 tss_a, tss_b;
-
 void task_b_main(struct SHEET *sht_back)
 {
   struct FIFO32 fifo;
@@ -144,33 +142,8 @@ void HariMain(void)
 	  memtotal/ (1024*1024), memman_total(memman) / 1024);
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
-
-  //esp_b
-  int task_b_esp;
-  task_b_esp = memman_alloc_4k(memman, 64*1024) + 64*1024;
-  *((int *)(task_b_esp + 4)) = (int)sht_back;
-  //task
-  tss_a.ldtr = 0;
-  tss_a.iomap = 0x40000000;
-  tss_b.ldtr = 0;
-  tss_b.iomap = 0x40000000;
-  tss_b.eip = (int)&task_b_main;
-  tss_b.eflags = 0x00000202;//IF=1
-  tss_b.eax = 0;
-  tss_b.ecx = 0;
-  tss_b.edx = 0;
-  tss_b.ebx = 0;
-  tss_b.esp = task_b_esp;
-  tss_b.ebp = 0;
-  tss_b.esi = 0;
-  tss_b.edi = 0;
-  tss_b.es = 1*8;
-  tss_b.cs = 2*8;
-  tss_b.ss = 1*8;
-  tss_b.ds = 1*8;
-  tss_b.fs = 1*8;
-  tss_b.gs = 1*8;
-
+  
+  //task_b
   struct TASK *task_b;
   task_init(memman);
   task_b = task_alloc();//分配一个task struct
@@ -185,20 +158,12 @@ void HariMain(void)
   *((int *)(task_b->tss.esp+4)) = (int)sht_back;
   task_run(task_b);
 
-
-  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
-  set_segmdesc(gdt+3, 103,(int)&tss_a, AR_TSS32);//段长限制为103字节
-  set_segmdesc(gdt+4, 103,(int)&tss_b, AR_TSS32);
-
-  load_tr(3 * 8);
-  mt_init();//manger task init
-
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
   for (;;) {
     io_cli();
     if (0 == fifo32_status(&fifo)){
-      io_stihlt();
+      io_sti();
     } else {
       i = fifo32_get(&fifo);
       io_sti();

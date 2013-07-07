@@ -24,11 +24,7 @@ struct TASKCTL {
   struct TASK tasks0[MAX_TASKS];
 };
 
-extern struct TIMER *mt_timer;
-extern int mt_tr;
-
-void mt_init(void);
-void mt_taskswitch(void);
+extern struct TIMER *task_timer;
 
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
