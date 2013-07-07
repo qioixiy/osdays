@@ -23,12 +23,13 @@ struct TASK *task_init(struct MEMMAN *memman)
 
   task = task_alloc();//分配一个任务给当前
   task->flags = 2;//运行状态，活动中
+  task->priority = 2;//0.02s
   taskctl->running = 1;
   taskctl->now = 0;
   taskctl->tasks[0] = task;
   load_tr(task->sel);
   task_timer = timer_alloc();//分配task切换timer
-  timer_settime(task_timer, 2);//设置任务切换时间
+  timer_settime(task_timer, task->priority);//设置任务切换时间,并且应用优先级
   
   return task;
 }
@@ -62,23 +63,32 @@ struct TASK *task_alloc(void)
   return 0;
 }
 
-void task_run(struct TASK *task)
+void task_run(struct TASK *task, int priority)
 {
-  task->flags = 2;//置为运行状态
-  taskctl->tasks[taskctl->running] = task;
-  taskctl->running++;//运行任务数加1
+  if (priority > 0) {
+    task->priority = priority;
+  }
+
+  if (task->flags != 2) {//如果不是运行状态才...,可以只是改变优先级
+    task->flags = 2;//置为运行状态
+    taskctl->tasks[taskctl->running] = task;
+    taskctl->running++;//运行任务数加1
+  }
   return;
 }
 
 void task_switch(void)
 {
-  timer_settime(task_timer, 2);//重写task timer
+  struct TASK *task;
+  taskctl->now++;
+  if (taskctl->now == taskctl->running) {//如果是最后一个，下次就选择第一个task
+    taskctl->now = 0;//轮询运行
+  }
+  task = taskctl->tasks[taskctl->now];
+  timer_settime(task_timer, task->priority);//重写task timer
+ 
   if (taskctl->running >= 2) {//超过一个任务运行
-    taskctl->now++;
-    if (taskctl->now == taskctl->running) {//如果是最后一个，下次就选择第一个task
-      taskctl->now = 0;//轮询运行
-    }
-    farjmp(0, taskctl->tasks[taskctl->now]->sel);
+    farjmp(0, task->sel);
   }
   return ;
 }

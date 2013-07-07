@@ -14,6 +14,7 @@ struct TSS32{
 
 struct TASK {
   int sel, flags;//sel用来存放GDT的编号
+  int priority;//task优先级
   struct TSS32 tss;//一个任务中的tss段
 };
 //TASK管理结构体
@@ -28,7 +29,7 @@ extern struct TIMER *task_timer;
 
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task);
+void task_run(struct TASK *task, int priority);
 void task_sleep(struct TASK *task);
 void task_switch(void);
 
