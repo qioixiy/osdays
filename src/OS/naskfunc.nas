@@ -165,6 +165,11 @@ _store_cr0:		;void store_cr0(int cr0)
 	MOV CR0, EAX
 	RET
 
+	GLOBAL _load_tr
+_load_tr:		;void load_tr(int tr)
+	LTR [ESP+4]	;tr
+	RET
+	
 	GLOBAL _memtest_sub
 _memtest_sub:	; unsigned int memtest_sub(unsigned int start, unsigned int end)
 	PUSH EDI		; 过程中需要使用EDI、ESI、EBX先入栈

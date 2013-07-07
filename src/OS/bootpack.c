@@ -102,6 +102,18 @@ void HariMain(void)
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
   
+  //task
+  tss_a.ldtr = 0;
+  tss_a.iomap = 0x40000000;
+  tss_b.ldtr = 0;
+  tss_b.iomap = 0x40000000;
+
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
+  set_segmdesc(gdt+3, 103,(int)&tss_a, AR_TSS32);//段长限制为103字节
+  set_segmdesc(gdt+4, 103,(int)&tss_b, AR_TSS32);
+
+  load_tr(3 * 8);
+
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
   for (;;) {
