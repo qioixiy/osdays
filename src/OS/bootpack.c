@@ -99,7 +99,9 @@ void HariMain(void)
 	  memtotal/ (1024*1024), memman_total(memman) / 1024);
   putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
- 
+  
+  int cursor_x = 8;
+  int cursor_c = COL8_FFFFFF;
   for (;;) {
     io_cli();
     if (0 == fifo32_status(&fifo)){
