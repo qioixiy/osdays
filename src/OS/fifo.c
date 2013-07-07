@@ -34,7 +34,7 @@ unsigned int fifo32_put(struct FIFO32 *fifo, unsigned int data)
   //fifo相关的任务处理
   if (fifo->task != 0) {
     if (fifo->task->flags != 2) {//如果任务不处于运行状态
-      task_run(fifo->task, 0);//将任务唤醒
+      task_run(fifo->task, -1, 0);//将任务唤醒
     }
   }
  
