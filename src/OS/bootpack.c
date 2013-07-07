@@ -16,7 +16,7 @@ struct TSS32 tss_a, tss_b;
 void task_b_main(struct SHEET *sht_back)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer_ts, *timer_put, *timer_1s;
+  struct TIMER *timer_put, *timer_1s;
   int i, fifobuf[128];
   int count = 0;
   int count0 = 0;
@@ -24,13 +24,10 @@ void task_b_main(struct SHEET *sht_back)
  
   fifo32_init(&fifo, 128, fifobuf);
 
-  timer_ts = timer_alloc();
   timer_put = timer_alloc();
   timer_1s = timer_alloc();
-  timer_init(timer_ts, &fifo, 2);
   timer_init(timer_put, &fifo, 1);
   timer_init(timer_1s, &fifo, 100);
-  timer_settime(timer_ts, 2);
   timer_settime(timer_put, 1);
   timer_settime(timer_1s, 100);
 
@@ -44,10 +41,7 @@ void task_b_main(struct SHEET *sht_back)
       i = fifo32_get(&fifo);
       io_sti();
       
-      if (2 == i) {//任务超时
-	farjmp(0, 3*8);
-	timer_settime(timer_ts, 2);
-      } else if (1 == i) {
+      if (1 == i) {
 	sprintf(s, "%11d", count);
 	putfont8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
 	timer_settime(timer_put, 1);
@@ -67,7 +61,6 @@ void HariMain(void)
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   char s[50];
   struct TIMER *timer, *timer2, *timer3;
-  struct TIMER *timer_ts;
 
   int mx, my;
   unsigned int i;
@@ -88,15 +81,12 @@ void HariMain(void)
   timer = timer_alloc();
   timer2 = timer_alloc();
   timer3 = timer_alloc();
-  timer_ts = timer_alloc();
   timer_init(timer, &fifo, 10);
   timer_init(timer2, &fifo, 3);
   timer_init(timer3, &fifo, 1);
-  timer_init(timer_ts, &fifo, 2);//任务切换用
   timer_settime(timer, 1000); 
   timer_settime(timer2, 300);
   timer_settime(timer3, 50);
-  timer_settime(timer_ts, 2);
   
   io_out8(PIC0_IMR, 0xf8); /* PIC1打开中断(11111000) */
   io_out8(PIC1_IMR, 0xef); /* 打开键盘中断(11101111) */
@@ -186,7 +176,8 @@ void HariMain(void)
   set_segmdesc(gdt+4, 103,(int)&tss_b, AR_TSS32);
 
   load_tr(3 * 8);
-  
+  mt_init();//manger task init
+
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
   for (;;) {
@@ -196,10 +187,7 @@ void HariMain(void)
     } else {
       i = fifo32_get(&fifo);
       io_sti();
-      if (2 == i) {
-	farjmp(0, 4*8);
-	timer_settime(timer_ts, 2);
-      } else if (256 <= i && i <= 511) {//键盘数据
+      if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
 	if (i < 0x54 + 256) {//一般数据
@@ -273,6 +261,8 @@ void HariMain(void)
 	timer_settime(timer3, 50);
 	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43); 
 	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
+      } else {
+	
       }
     }
   }

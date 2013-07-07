@@ -8,4 +8,10 @@ struct TSS32{
   int ldtr, iomap;
 };
 
+extern struct TIMER *mt_timer;
+extern int mt_tr;
+
+void mt_init(void);
+void mt_taskswitch(void);
+
 #endif
