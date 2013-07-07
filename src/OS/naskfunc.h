@@ -22,4 +22,6 @@ void load_tr(int tr);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 
 void taskswitch4(void);
+void taskswitch3(void);
+
 #endif

@@ -15,8 +15,26 @@ struct TSS32 tss_a, tss_b;
 
 void task_b_main(void)
 {
+  struct FIFO32 fifo;
+  struct TIMER *timer;
+  int i, fifobuf[128];
+  
+  fifo32_init(&fifo, 128, fifobuf);
+  timer = timer_alloc();
+  timer_init(timer, &fifo, 1);
+  timer_settime(timer, 500);
+
   for (;;) {
-    io_hlt();
+    io_cli();
+    if (fifo32_status(&fifo) == 0) {
+      io_stihlt();
+    } else {
+      i = fifo32_get(&fifo);
+      io_sti();
+      if (1 == i) {//5s³¬Ê±µ½
+	taskswitch3();
+      }
+    }
   }
 }
 

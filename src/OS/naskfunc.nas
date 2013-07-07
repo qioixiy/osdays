@@ -208,3 +208,8 @@ mts_fin:
 _taskswitch4:			;void taskswitch4(void)
 	JMP 4*8:0
 	RET
+
+	GLOBAL _taskswitch3
+_taskswitch3:			;void taskswitch3(void)
+	JMP 3*8:0
+	RET
