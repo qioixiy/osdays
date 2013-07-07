@@ -160,16 +160,23 @@ void HariMain(void)
 	putfont8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
       } else if (3 == i){//3s timer
 	putfont8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
-      } else if(1 == i) {//I1
-	timer_init(timer3, &fifo, 0);//设置为0
-	boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+      } else if (i <= 1) {
+	if(1 == i) {//I1
+	  timer_init(timer3, &fifo, 0);//设置为0
+	  cursor_c = COL8_000000;
+	  //boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+	  //timer_settime(timer3, 50);
+	  //sheet_refresh(sht_back, 8, 96, 16, 112);
+	} else if(0 == i){
+	  timer_init(timer3, &fifo, 1);//设置为1
+	  cursor_c = COL8_FFFFFF;
+	  //boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111); 
+	  //timer_settime(timer3, 50);
+	  //sheet_refresh(sht_back, 8, 96, 16, 112);
+	}
 	timer_settime(timer3, 50);
-	sheet_refresh(sht_back, 8, 96, 16, 112);
-      } else if(0 == i){
-	timer_init(timer3, &fifo, 1);//设置为1
-	boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111); 
-	timer_settime(timer3, 50);
-	sheet_refresh(sht_back, 8, 96, 16, 112);
+	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43); 
+	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
       }
     }
   }
