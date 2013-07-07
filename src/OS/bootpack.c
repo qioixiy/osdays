@@ -100,6 +100,9 @@ void HariMain(void)
       if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
+	if (0x1e + 256 == i) {
+	  putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, "A", 1);
+	}
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
 	if (mouse_decode(&mdec, i-512) != 0) {
@@ -138,11 +141,9 @@ void HariMain(void)
 	  sheet_slide(sht_mouse, mx, my);
 	}
       } else if (10 == i) {//10s timer
-	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
-	sheet_refresh(sht_back, 0, 64, 56, 80);
+	putfont8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
       } else if (3 == i){//3s timer
-	putfont8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
-	sheet_refresh(sht_back, 0, 80, 48, 96);
+	putfont8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
       } else if(1 == i) {//I1
 	timer_init(timer3, &fifo, 0);//设置为0
 	boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
