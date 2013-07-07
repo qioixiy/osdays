@@ -1,5 +1,6 @@
 #ifndef _TASK_H
 #define _TASK_H
+#include "memory.h"
 
 #define MAX_TASKS 1000//最大任务数
 #define TASK_GDT0 3//定义从GDT的第几号开始分配给TSS
@@ -28,5 +29,8 @@ extern int mt_tr;
 
 void mt_init(void);
 void mt_taskswitch(void);
+
+struct TASK *task_init(struct MEMMAN *memman);
+struct TASK *task_alloc(void);
 
 #endif
