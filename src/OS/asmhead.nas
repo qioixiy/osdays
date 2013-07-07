@@ -1,7 +1,7 @@
 ;haribote-os boot asm
 ;TAB=4
 
-[INSTRSET "i486p"];EAX
+[INSTRSET "i486p"];EAX可用
 
 BOTPAK	EQU 0X00280000
 DSKCAC	EQU 0X00100000
@@ -22,7 +22,7 @@ FNAME 	EQU 0xA600  	;镜像中文件name
 ;	0x105 : 1024 x  768 x 8bit
 ;	0x107 : 1280 x 1024 x 8bit
 
-VBEMODE EQU 0X103
+VBEMODE EQU 0X100
 ;编译后的文件放在0X4200处，在内存的位置为0X8000+0X4200=0XC200
 ;程序装载的位置
 	org 0xc200	 	
