@@ -171,6 +171,21 @@ void HariMain(void)
   tss_b.fs = 1*8;
   tss_b.gs = 1*8;
 
+  struct TASK *task_b;
+  task_init(memman);
+  task_b = task_alloc();//分配一个task struct
+  task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
+  task_b->tss.eip = (int)&task_b_main;
+  task_b->tss.es = 1*8;
+  task_b->tss.cs = 2*8;
+  task_b->tss.ss = 1*8;
+  task_b->tss.ds = 1*8;
+  task_b->tss.fs = 1*8;
+  task_b->tss.gs = 1*8;
+  *((int *)(task_b->tss.esp+4)) = (int)sht_back;
+  task_run(task_b);
+
+
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
   set_segmdesc(gdt+3, 103,(int)&tss_a, AR_TSS32);//段长限制为103字节
   set_segmdesc(gdt+4, 103,(int)&tss_b, AR_TSS32);
