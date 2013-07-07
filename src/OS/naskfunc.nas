@@ -204,7 +204,7 @@ mts_fin:
 	POP EDI
 	RET
 
-	GLOBAL taskswitch
-_taskswitch:			;void taskswitch(void)
+	GLOBAL _taskswitch4
+_taskswitch4:			;void taskswitch4(void)
 	JMP 4*8:0
 	RET

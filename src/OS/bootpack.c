@@ -185,6 +185,7 @@ void HariMain(void)
 	}
       } else if (10 == i) {//10s timer
 	putfont8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
+	taskswitch4();
       } else if (3 == i){//3s timer
 	putfont8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
       } else if (i <= 1) {
