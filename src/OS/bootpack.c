@@ -128,40 +128,11 @@ void HariMain(void)
   fifo.task = task_a;
   task_run(task_a, 1, 0);
 
-  //task_b[3]
-  struct SHEET *sht_win_b[3];
-  unsigned char *buf_win_b;
-  struct TASK *task_b[3];
-  for (i = 0; i < 3; i++) {
-    sht_win_b[i] = sheet_alloc(shtctl);
-    buf_win_b = (unsigned char *)memman_alloc_4k(memman, 144*52);
-    sheet_setbuf(sht_win_b[i], buf_win_b, 144, 52, -1);//无透明颜色
-    sprintf(s, "task_b%d", i);
-    make_window8(buf_win_b, 144, 52, s, 0);
-
-    task_b[i] = task_alloc();//分配一个task struct
-    task_b[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
-    task_b[i]->tss.eip = (int)&task_b_main;
-    task_b[i]->tss.es = 1*8;
-    task_b[i]->tss.cs = 2*8;
-    task_b[i]->tss.ss = 1*8;
-    task_b[i]->tss.ds = 1*8;
-    task_b[i]->tss.fs = 1*8;
-    task_b[i]->tss.gs = 1*8;
-    *((int *)(task_b[i]->tss.esp+4)) = (int)sht_win_b[i];
-    //task_run(task_b[i], 2, i+1);
-  }
   sheet_slide(sht_back, 0, 0);
-  sheet_slide(sht_win_b[0], 168, 56);
-  sheet_slide(sht_win_b[1], 8, 116);
-  sheet_slide(sht_win_b[2], 168, 116);
   sheet_slide(sht_win, 8, 56);
   sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
 
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_win_b[0], 1);
-  sheet_updown(sht_win_b[1], 2);
-  sheet_updown(sht_win_b[2], 3);
   sheet_updown(sht_win, 4);
   sheet_updown(sht_mouse, 5);
 
