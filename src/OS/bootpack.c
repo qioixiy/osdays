@@ -11,36 +11,38 @@ static char keytable[0x54] = {
   '2', '3', '0', '.'
 };
 
-void task_b_main(struct SHEET *sht_back)
+void console_task(struct SHEET *sheet)
 {
   struct FIFO32 fifo;
-  struct TIMER *timer_1s;
-  int i, fifobuf[128];
-  int count = 0;
-  int count0 = 0;
-  char s[12];
- 
-  fifo32_init(&fifo, 128, fifobuf, 0);
-
-  timer_1s = timer_alloc();
-  timer_init(timer_1s, &fifo, 100);
-  timer_settime(timer_1s, 100);
+  struct TIMER *timer;
+  struct TASK *task = task_now();
+  
+  int i, fifobuf[128], cursor_x = 8, cursor_c = COL8_000000;
+  fifo32_init(&fifo, 128, fifobuf, task);
+  timer = timer_alloc();
+  timer_init(timer, &fifo, 1);
+  timer_settime(timer, 50);
 
   for (;;) {
-    count++;
-
     io_cli();
     if (fifo32_status(&fifo) == 0) {
+      task_sleep(task);
       io_sti();
     } else {
       i = fifo32_get(&fifo);
       io_sti();
       
-      if (100 == i){
-	sprintf(s, "%11d", count - count0);
-	putfont8_asc_sht(sht_back, 24, 28, COL8_000000, COL8_C6C6C6, s, 11);
-	count0 = count;
-	timer_settime(timer_1s, 100);
+      if (i <= 1){//光标定时器
+	if (i != 0) {
+	  timer_init(timer, &fifo, 0);
+	  cursor_c = COL8_FFFFFF;
+	} else {
+	  timer_init(timer, &fifo, 1);
+	  cursor_c = COL8_000000;
+	}
+	timer_settime(timer, 50);
+	boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28,cursor_x+7, 43);
+	sheet_refresh(sheet, cursor_x, 28, cursor_x+8, 44);
       }
     }
   }
@@ -108,7 +110,7 @@ void HariMain(void)
   
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99);//背景色号99
-  make_window8(sht_win->buf, 144, 52, "window", 1);//
+  make_window8(sht_win->buf, 144, 52, "task_a", 1);//
   make_textbox8(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 
   //鼠标初始位置
@@ -128,19 +130,10 @@ void HariMain(void)
   fifo.task = task_a;
   task_run(task_a, 1, 0);
 
-  sheet_slide(sht_back, 0, 0);
-  sheet_slide(sht_win, 8, 56);
-  sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
-
-  sheet_updown(sht_back, 0);
-  sheet_updown(sht_win, 4);
-  sheet_updown(sht_mouse, 5);
-
   //sht_cons
   struct TASK *task_cons;
   struct SHEET *sht_cons;
   unsigned char *buf_cons;
-
   sht_cons = sheet_alloc(shtctl);
   buf_cons = (unsigned char *)memman_alloc_4k(memman, 256*165);
   sheet_setbuf(sht_cons, buf_cons, 256, 165, -1);//无透明色
@@ -148,7 +141,7 @@ void HariMain(void)
   make_textbox8(sht_cons, 8, 28, 240, 128, COL8_000000);
   task_cons = task_alloc();//分配一个task struct
   task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
-  task_cons->tss.eip = (int)&task_b_main;
+  task_cons->tss.eip = (int)&console_task;
   task_cons->tss.es = 1*8;
   task_cons->tss.cs = 2*8;
   task_cons->tss.ss = 1*8;
@@ -157,6 +150,16 @@ void HariMain(void)
   task_cons->tss.gs = 1*8;
   *((int *)(task_cons->tss.esp+4)) = (int)sht_cons;
   task_run(task_cons, 2, 2);//level=2,priority=2
+
+  sheet_slide(sht_back, 0, 0);
+  sheet_slide(sht_win, 64, 56);
+  sheet_slide(sht_cons, 32, 4);
+  sheet_slide(sht_mouse, mx, my);//移动鼠标到中心，显示出来
+
+  sheet_updown(sht_back, 0);
+  sheet_updown(sht_cons, 1);
+  sheet_updown(sht_win, 2);
+  sheet_updown(sht_mouse, 3);
 
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
