@@ -149,7 +149,7 @@ void HariMain(void)
     task_b[i]->tss.fs = 1*8;
     task_b[i]->tss.gs = 1*8;
     *((int *)(task_b[i]->tss.esp+4)) = (int)sht_win_b[i];
-    task_run(task_b[i], 2, i+1);
+    //task_run(task_b[i], 2, i+1);
   }
   sheet_slide(sht_back, 0, 0);
   sheet_slide(sht_win_b[0], 168, 56);
