@@ -165,6 +165,28 @@ void HariMain(void)
   sheet_updown(sht_win, 4);
   sheet_updown(sht_mouse, 5);
 
+  //sht_cons
+  struct TASK *task_cons;
+  struct SHEET *sht_cons;
+  unsigned char *buf_cons;
+
+  sht_cons = sheet_alloc(shtctl);
+  buf_cons = (unsigned char *)memman_alloc_4k(memman, 256*165);
+  sheet_setbuf(sht_cons, buf_cons, 256, 165, -1);//无透明色
+  make_window8(buf_cons,256, 165, "console", 0);
+  make_textbox8(sht_cons, 8, 28, 240, 128, COL8_000000);
+  task_cons = task_alloc();//分配一个task struct
+  task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
+  task_cons->tss.eip = (int)&task_b_main;
+  task_cons->tss.es = 1*8;
+  task_cons->tss.cs = 2*8;
+  task_cons->tss.ss = 1*8;
+  task_cons->tss.ds = 1*8;
+  task_cons->tss.fs = 1*8;
+  task_cons->tss.gs = 1*8;
+  *((int *)(task_cons->tss.esp+4)) = (int)sht_cons;
+  task_run(task_cons, 2, 2);//level=2,priority=2
+
   int cursor_x = 8;
   int cursor_c = COL8_FFFFFF;
   
