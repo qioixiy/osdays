@@ -1,4 +1,5 @@
 #include "fifo.h"
+#include "mtask.h"
 
 //≥ı ºªØFIFO buf
 void fifo32_init(struct FIFO32 *fifo, int size, unsigned int *buf, struct TASK *task)

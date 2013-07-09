@@ -1,9 +1,9 @@
 #ifndef _FIFO_H
 #define _FIFO_H
-#include "mtask.h"
+//#include "mtask.h"
 
 #define FLAGS_OVERRUN 0
-
+struct TASK;
 struct FIFO32 {
   unsigned int *buf;//fifo buffer pointer
   int p;//下一个数据写入的位置

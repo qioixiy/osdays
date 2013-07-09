@@ -1,6 +1,7 @@
 #ifndef _TASK_H
 #define _TASK_H
 #include "memory.h"
+#include "fifo.h"
 
 #define MAX_TASKS 1000//最大任务数
 #define TASK_GDT0 3//定义从GDT的第几号开始分配给TSS
@@ -20,6 +21,7 @@ struct TASK {
   int sel, flags;//sel用来存放GDT的编号
   int priority;//task优先级
   int level;
+  struct FIFO32 fifo;//task FIFI32
   struct TSS32 tss;//一个任务中的tss段
 };
 
