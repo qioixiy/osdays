@@ -258,8 +258,6 @@ void HariMain(void)
 	  wait_KBC_sendready();
 	  io_out8(PORT_KEYDAT, keycmd_wait);
 	}
-
-
 	
 	if (i < 0x54 + 256 ) {//按键盘编码为字符编码
 	  if (key_shift == 0) {
@@ -306,16 +304,24 @@ void HariMain(void)
 	    key_to = 1;
 	    make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
 	    make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
+	    cursor_c = -1;//不显示光标
+	    boxfill8(sht_win->buf, sht_win->bxsize,COL8_FFFFFF, cursor_x, 28, cursor_x+7, 43);
 	  } else {
 	    key_to = 0;
 	    make_wtitle8(buf_win, sht_win->bxsize, "task_a", 1);
 	    make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
+	    cursor_c = COL8_000000;//显示光标
 	  }
 	  //刷新title
 	  sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
 	  sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
 	}
-	
+	//重新显示光标
+	if (cursor_c >= 0) {
+	  boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);
+	}
+	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
+
 	if (i == 256 + 0x2a) {//左shift on
 	  key_shift |= 1;
 	}
@@ -332,9 +338,6 @@ void HariMain(void)
 	  key_shift &= ~2;
 	}
 
-	//光标再显示
-	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,cursor_x+7, 43);
-	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
 	if (mouse_decode(&mdec, i-512) != 0) {
@@ -383,14 +386,20 @@ void HariMain(void)
       } else if (i <= 1) {
 	if(1 == i) {//I1
 	  timer_init(timer, &fifo, 0);//设置为0
-	  cursor_c = COL8_000000;
+	  if (cursor_c >= 0){
+	    cursor_c = COL8_000000;
+	  }
 	} else if(0 == i){
 	  timer_init(timer, &fifo, 1);//设置为1
-	  cursor_c = COL8_FFFFFF;
+	  if (cursor_c >= 0) {
+	    cursor_c = COL8_FFFFFF;
+	  }
 	}
 	timer_settime(timer, 50);
-	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43); 
-	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
+	if (cursor_c >= 0) {
+	  boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43); 
+	  sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
+	}
       } else {
 	
       }
