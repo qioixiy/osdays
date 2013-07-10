@@ -204,9 +204,24 @@ void HariMain(void)
   
   int key_to = 0;
   int key_shift = 0;//shift状态
-  int key_leds = (binfo->leds>>4) & 7;//
+  int key_leds = (binfo->leds>>4) & 7;//键盘指示灯状态
+  int keycmd_wait = -1;
 
+  struct FIFO32 keycmd;//键盘控制器设定FIFO
+  int keycmd_buf[32];
+  fifo32_init(&keycmd_buf, sizeof keycmd_buf, keycmd_wait, 0);
+  //为了避免和键盘当前状态的冲突，在一开始先进行设置
+  fifo32_put(&keycmd, KEYCMD_LED);
+  fifo32_put(&keycmd, key_leds);
+  
   for (;;) {
+    if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
+      //如果存在向键盘控制器发送的数据，则发送出去
+      keycmd_wait = fifo32_get(&keycmd);
+      wait_KBC_sendready();
+      io_out8(PORT_KEYDAT, key_leds);
+    }
+
     io_cli();
     if (0 == fifo32_status(&fifo)){
       task_sleep(task_a);
@@ -217,6 +232,35 @@ void HariMain(void)
       if (256 <= i && i <= 511) {//键盘数据
 	sprintf(s, "%02X", i-256);
 	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
+	
+	//CAPSLOCK，大写锁定键
+	if (i == 256 + 0x3a) {
+	  key_leds ^= 4;
+	  fifo32_put(&keycmd, KEYCMD_LED);
+	  fifo32_put(&keycmd, key_leds);
+	}
+	//Numlock
+	if (i == 256 + 0x45) {
+	  key_leds ^= 2;
+	  fifo32_put(&keycmd, KEYCMD_LED);
+	  fifo32_put(&keycmd, key_leds);
+	}
+	//ScrollLock
+	if (i == 256 + 0x46) {
+	  key_leds ^= 1;
+	  fifo32_put(&keycmd, KEYCMD_LED);
+	  fifo32_put(&keycmd, key_leds);
+	}
+	if (i == 256 + 0xfa) {//键盘成功接收到数据
+	  keycmd_wait = -1;
+	}
+	if (i == 256 + 0xfe) {//键盘没有成功接收到数据
+	  wait_KBC_sendready();
+	  io_out8(PORT_KEYDAT, keycmd_wait);
+	}
+
+
+	
 	if (i < 0x54 + 256 ) {//按键盘编码为字符编码
 	  if (key_shift == 0) {
 	    s[0] = keytable0[i - 256];

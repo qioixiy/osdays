@@ -21,4 +21,6 @@ struct BOOTINFO {
 };
 #define ADR_BOOTINFO 0X00000FF0
 
+#define KEYCMD_LED 0XED
+
 #endif
