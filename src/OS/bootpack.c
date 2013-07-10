@@ -204,6 +204,7 @@ void HariMain(void)
   
   int key_to = 0;
   int key_shift = 0;//shift状态
+  int key_leds = (binfo->leds>>4) & 7;//
 
   for (;;) {
     io_cli();
@@ -224,6 +225,14 @@ void HariMain(void)
 	  } else {
 	    s[0] = 0;
 	  }
+	  //大小写字符转换
+	  if ('A' <= s[0] && s[0] <= 'Z') {
+	    if (((key_leds&4) == 0 && key_shift == 0) //大写字符锁定键没有打开,shift没有按下
+		|| ((key_leds&4) != 0 && key_shift != 0)) {
+	      s[0] += 0X20;
+	    }
+	  }
+	  
 	  if (s[0] != 0) {
 	    if (key_to == 0) {//发送给任务a
 	      if (cursor_x < 128) {
