@@ -30,7 +30,7 @@ void console_task(struct SHEET *sheet)
   struct TASK *task = task_now();
   char s[10];
 
-  int i, fifobuf[128], cursor_x = 16, cursor_c = -1;//初始为不闪烁
+  int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;//初始为不闪烁
   fifo32_init(&task->fifo, 128, fifobuf, task);
   timer = timer_alloc();
   timer_init(timer, &task->fifo, 1);
@@ -76,16 +76,25 @@ void console_task(struct SHEET *sheet)
 	if (i == 8 + 256) {//退格键
 	  if (cursor_x > 16) {
 	    //用空白擦除光标后将光标前移一位
-	    putfont8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
+	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
 	    cursor_x -= 8;
 	  }
-	}
-	else {//一般字符
+	} else if (i == 10+256) {
+	  //回车键
+	  if (cursor_y < 28+112) {
+	    //用空格将光标擦除
+	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+	    cursor_y += 16;
+	    //显示提示符
+	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
+	    cursor_x = 16;
+	  }
+	} else {//一般字符
 	  if (cursor_x < 240) {
 	    //显示字符后将光标后移动一位
 	    s[0] = i-256;
 	    s[1] = 0;
-	    putfont8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
 	    cursor_x += 8;
 	  }
 	}
@@ -93,9 +102,9 @@ void console_task(struct SHEET *sheet)
       
       //重新显示光标
       if (cursor_c >= 0) {
-	boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+	boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y+15);
       }
-      sheet_refresh(sheet,cursor_x, 28, cursor_x + 8, 44);
+      sheet_refresh(sheet,cursor_x, cursor_y, cursor_x + 8, cursor_y+16);
     }
   }
 }
@@ -337,23 +346,24 @@ void HariMain(void)
 	  boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);
 	}
 	sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
-
 	if (i == 256 + 0x2a) {//左shift on
 	  key_shift |= 1;
 	}
-
 	if (i == 256 + 0x36) {//右shift on
 	  key_shift |= 2;
 	}
-
 	if (i == 256 + 0xaa) {//左shift off
 	  key_shift &= ~1;
 	}
-
 	if (i == 256 + 0xb6) {//右shift off
 	  key_shift &= ~2;
 	}
-
+	if (i == 256+0x1c) {//回车键
+	  if (key_to != 0) {
+	    fifo32_put(&task_cons->fifo, 10+256);
+	  }
+	}
+	
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
 	if (mouse_decode(&mdec, i-512) != 0) {
