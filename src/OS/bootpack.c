@@ -23,12 +23,36 @@ static char keytable1[0x80] = {
   0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 };
 
-#define putfonts8_asc_sht putfont8_asc_sht
-void console_task(struct SHEET *sheet)
+int cons_newline(int cursor_y, struct SHEET *sheet)
+{
+  int x, y;
+  if (cursor_y < 28+112) {
+    cursor_y += 16;//换行
+  } else {
+    //滚动
+    for (y = 28; y < 28+112; y++) {
+      for (x = 8; x < 8+240; x++) {
+	sheet->buf[x + y*sheet->bxsize] = sheet->buf[x + (y+16)*sheet->bxsize];
+      }
+    }
+    for (y = 28+112; y < 28+128; y++) {
+      for (x = 8; x < 8+240; x++) {
+	sheet->buf[x + y*sheet->bxsize] = COL8_000000;
+      }
+    }
+    sheet_refresh(sheet, 8, 28, 8+240, 28+128);
+  }
+
+  return cursor_y;
+}
+
+void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
   struct TIMER *timer;
   struct TASK *task = task_now();
   char s[10];
+  char cmdline[30];//命令行缓存
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
 
   int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;//初始为不闪烁
   fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -85,6 +109,25 @@ void console_task(struct SHEET *sheet)
 	  //用空格将光标擦除
 	  putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
 	  //
+	  cmdline[cursor_x/8-2] = 0;
+	  cursor_y = cons_newline(cursor_y, sheet);
+	  //执行命令
+	  if (cmdline[0] == 'm' &&
+	      cmdline[1] == 'e' &&
+	      cmdline[2] == 'm') {
+	    //mem命令
+	    sprintf(s, "total %dMB", memtotal/(1024*1024));
+	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+	    cursor_y = cons_newline(cursor_y, sheet);
+	    sprintf(s, "free %dKB", memman_total(memman)/1024);
+	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+	    cursor_y = cons_newline(cursor_y, sheet);
+	  } else if (cmdline[0] != 0) {
+	    //其他命令
+	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
+	    cursor_y = cons_newline(cursor_y, sheet);
+	  }
+	  
 	  if (cursor_y < 28+112) {
 	    cursor_y += 16;//换行
 	  } else {
@@ -109,6 +152,7 @@ void console_task(struct SHEET *sheet)
 	    //显示字符后将光标后移动一位
 	    s[0] = i-256;
 	    s[1] = 0;
+	    cmdline[cursor_x/8 - 2] = i - 256;//保持字符到cmdline
 	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
 	    cursor_x += 8;
 	  }
@@ -209,7 +253,7 @@ void HariMain(void)
   make_window8(buf_cons,256, 165, "console", 0);
   make_textbox8(sht_cons, 8, 28, 240, 128, COL8_000000);
   task_cons = task_alloc();//分配一个task struct
-  task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -8;
+  task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -12;
   task_cons->tss.eip = (int)&console_task;
   task_cons->tss.es = 1*8;
   task_cons->tss.cs = 2*8;
@@ -218,6 +262,7 @@ void HariMain(void)
   task_cons->tss.fs = 1*8;
   task_cons->tss.gs = 1*8;
   *((int *)(task_cons->tss.esp+4)) = (int)sht_cons;
+  *((int *)(task_cons->tss.esp+8)) = (int)memtotal;
   task_run(task_cons, 2, 2);//level=2,priority=2
 
   sheet_slide(sht_back, 0, 0);
