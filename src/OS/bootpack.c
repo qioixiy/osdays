@@ -193,13 +193,6 @@ void HariMain(void)
   mx = (binfo->scrnx - 16) / 2;
   my = (binfo->scrny - 16) / 2;
   
-  sprintf(s, "(%3d, %3d)", mx, my);
-  putfont8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-  sprintf(s, "memory %dMB free : %dKB",
-	  memtotal/ (1024*1024), memman_total(memman) / 1024);
-  putfont8_asc(buf_back, binfo->scrnx, 0 , 32, COL8_FFFFFF, s);
-  sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
-  
   //task_a
   struct TASK *task_a;
   task_a = task_init(memman);
@@ -268,8 +261,6 @@ void HariMain(void)
       i = fifo32_get(&fifo);
       io_sti();
       if (256 <= i && i <= 511) {//键盘数据
-	sprintf(s, "%02X", i-256);
-	putfont8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
 	
 	//CAPSLOCK，大写锁定键
 	if (i == 256 + 0x3a) {
@@ -381,20 +372,7 @@ void HariMain(void)
 	
       } else if (512 <= i && i <= 767) {//鼠标数据
 	//鼠标的3个字节都齐全了，显示出来
-	if (mouse_decode(&mdec, i-512) != 0) {
-	  sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
-	  if (mdec.btn & 0x01) {
-	    s[1] = 'L';
-	  } 
-	  if (mdec.btn & 0x02) {
-	    s[3] = 'R';
-	  } 
-	  if (mdec.btn & 0x04) {
-	    s[2] = 'C';
-	  } 
-	  
-	  putfont8_asc_sht(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, strlen(s));
-	  
+	if (mouse_decode(&mdec, i-512) != 0) {	  
 	  //计算鼠标新的位置
 	  mx += mdec.x;
 	  my += mdec.y;
