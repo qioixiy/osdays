@@ -38,6 +38,8 @@ void console_task(struct SHEET *sheet)
 
   //显示提示符
   putfont8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
+
+  int x, y;
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {
@@ -79,16 +81,29 @@ void console_task(struct SHEET *sheet)
 	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
 	    cursor_x -= 8;
 	  }
-	} else if (i == 10+256) {
-	  //回车键
+	} else if (i == 10+256) {//回车键enter
+	  //用空格将光标擦除
+	  putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+	  //
 	  if (cursor_y < 28+112) {
-	    //用空格将光标擦除
-	    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-	    cursor_y += 16;
-	    //显示提示符
-	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
-	    cursor_x = 16;
+	    cursor_y += 16;//换行
+	  } else {
+	    //向下滚动一行
+	    for (y = 28; y < 28+112; y++) {
+	      for (x = 8; x < 8+240; x++) {
+		sheet->buf[x+y*sheet->bxsize] = sheet->buf[x+(y+16) * sheet->bxsize];
+	      }
+	    }
+	    for (y = 28+112; y < 28+128; y++) {
+	      for (x = 8; x < 8+240; x++) {
+		sheet->buf[x+y*sheet->bxsize] = COL8_000000;
+	      }
+	    }
+	    sheet_refresh(sheet, 8, 28, 8+240, 28+128);
 	  }
+	  //显示提示符
+	  putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
+	  cursor_x = 16;
 	} else {//一般字符
 	  if (cursor_x < 240) {
 	    //显示字符后将光标后移动一位
