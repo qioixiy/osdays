@@ -46,6 +46,7 @@ int cons_newline(int cursor_y, struct SHEET *sheet)
   return cursor_y;
 }
 
+#define putfonts8_asc_sht putfont8_asc_sht
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
   struct TIMER *timer;
@@ -112,9 +113,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	  cmdline[cursor_x/8-2] = 0;
 	  cursor_y = cons_newline(cursor_y, sheet);
 	  //执行命令
-	  if (cmdline[0] == 'm' &&
-	      cmdline[1] == 'e' &&
-	      cmdline[2] == 'm') {
+	  if (!strcmp(cmdline, "mem")) {
 	    //mem命令
 	    sprintf(s, "total %dMB", memtotal/(1024*1024));
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
@@ -122,27 +121,20 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	    sprintf(s, "free %dKB", memman_total(memman)/1024);
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
 	    cursor_y = cons_newline(cursor_y, sheet);
+	    cursor_y = cons_newline(cursor_y, sheet);
+	  } else if (!strcmp(cmdline, "cls")) {
+	    for (y = 28; y < 28+128; y++) {
+	      for (x = 8; x < 8+240; x++) {
+		sheet->buf[x + y*sheet->bxsize] = COL8_000000;
+	      }
+	    }
+	    sheet_refresh(sheet, 8, 28, 8+240, 28+128);
+	    cursor_y = 28;
 	  } else if (cmdline[0] != 0) {
 	    //其他命令
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
 	    cursor_y = cons_newline(cursor_y, sheet);
-	  }
-	  
-	  if (cursor_y < 28+112) {
-	    cursor_y += 16;//换行
-	  } else {
-	    //向下滚动一行
-	    for (y = 28; y < 28+112; y++) {
-	      for (x = 8; x < 8+240; x++) {
-		sheet->buf[x+y*sheet->bxsize] = sheet->buf[x+(y+16) * sheet->bxsize];
-	      }
-	    }
-	    for (y = 28+112; y < 28+128; y++) {
-	      for (x = 8; x < 8+240; x++) {
-		sheet->buf[x+y*sheet->bxsize] = COL8_000000;
-	      }
-	    }
-	    sheet_refresh(sheet, 8, 28, 8+240, 28+128);
+	    cursor_y = cons_newline(cursor_y, sheet);
 	  }
 	  //显示提示符
 	  putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
@@ -470,3 +462,4 @@ void HariMain(void)
     }
   }
 }
+
