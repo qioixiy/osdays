@@ -49,6 +49,8 @@ int cons_newline(int cursor_y, struct SHEET *sheet)
 #define putfonts8_asc_sht putfont8_asc_sht
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
+  struct FILEINFO *finfo = (struct FILEINFO *)(ADR_DISKIMG + 0x002600);
+
   struct TIMER *timer;
   struct TASK *task = task_now();
   char s[10];
@@ -130,6 +132,24 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	    }
 	    sheet_refresh(sheet, 8, 28, 8+240, 28+128);
 	    cursor_y = 28;
+	  } else if (!strcmp("dir", cmdline)) {
+	    for (x = 0; x < 224; x++) {//能容纳的最大文件数
+	      if (finfo[x].name[0] == 0x00) {//不存在文件
+		break;
+	      }
+	      if (finfo[x].name[0] != 0xe5) {//e5表示文件已经被删除
+		sprintf(s, "filename.ext %7d", finfo[x].size);
+		for (y = 0; y < 8; y++) {
+		  s[y] = finfo[x].name[y];
+		}
+		s[9] = finfo[x].ext[0];
+		s[10] = finfo[x].ext[1];
+		s[11] = finfo[x].ext[2];
+		putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+		
+		cursor_y = cons_newline(cursor_y, sheet);
+	      }
+	    }
 	  } else if (cmdline[0] != 0) {
 	    //其他命令
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
