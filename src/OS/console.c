@@ -374,7 +374,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   if (finfo != 0) {
     //找到文件
     p = (char *)memman_alloc_4k(memman, finfo->size);
-    *((int *)0xfe8) = (int)p;
+    *((int *)0xfe8) = (int)p;//保存CS基址,代码段的起始位置
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
     set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);//设置段属性
     farcall(0, 1003*8);
@@ -405,7 +405,7 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l)
 
 void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
 {
-  int cs_base = *((int *)0xfe8);//取得CS基址
+  int cs_base = *((int *)0xfe8);//取得CS基址,代码段的起始位置
   struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
   if (edx == 1) {
     cons_putchar(cons, eax&0xff, 1);
