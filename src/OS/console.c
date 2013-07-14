@@ -383,7 +383,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 
     //C环境支持,加入跳转头部
     if (finfo->size >= 8 &&
-	strncmp(p+4, "Hari", 4) == 0) {
+	strncmp(p+4, "Hari", 4) == 0) {//支持Hari格式的应用程序
       p[0] = 0xe8;
       p[1] = 0x16;
       p[2] = 0x00;
