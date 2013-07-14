@@ -23,6 +23,7 @@ static char keytable1[0x80] = {
   0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 };
 
+//换行处理
 int cons_newline(int cursor_y, struct SHEET *sheet)
 {
   int x, y;
@@ -53,8 +54,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 
   struct TIMER *timer;
   struct TASK *task = task_now();
-  char s[10];
+  char s[30];
   char cmdline[30];//命令行缓存
+  char *p;
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
 
   int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;//初始为不闪烁
@@ -137,7 +139,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	      if (finfo[x].name[0] == 0x00) {//不存在文件
 		break;
 	      }
-	      if (finfo[x].name[0] != 0xe5) {//e5表示文件已经被删除
+	      if (finfo[x].name[0] != 0xe5) {//0xe5表示文件已经被删除
 		sprintf(s, "filename.ext %7d", finfo[x].size);
 		for (y = 0; y < 8; y++) {
 		  s[y] = finfo[x].name[y];
@@ -150,6 +152,68 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		cursor_y = cons_newline(cursor_y, sheet);
 	      }
 	    }
+	  } else if (cmdline[0] == 't' &&
+		     cmdline[1] == 'y' &&
+		     cmdline[2] == 'p' &&
+		     cmdline[3] == 'e' &&
+		     cmdline[4] == ' ') {
+	    //type 
+	    //准备文件名
+	    for (y = 0; y < 11; y++) {
+	      s[y] = ' ';
+	    }
+	    y = 0;
+	    for (x= 5; y< 11 && cmdline[x]!=0; x++) {
+	      if (cmdline[x] == '.' &&
+		  y <= 8) {
+		y = 8;
+	      } else {
+		s[y] = cmdline[x];
+		if ('a' <= s[y] &&
+		    s[y] <= 'z') {
+		  s[y] -= 0x20;
+		}
+		y++;
+	      }
+	    }
+	    //find file name
+	    for (x = 0; x < 224; ) {
+	      if (finfo[x].name[0] == 0x00) {
+		break;
+	      }
+	      if ((finfo[x].type & 0x18) == 0) {
+		for (y = 0; y < 11; y++) {
+		  if (finfo[x].name[y] != s[y]) {
+		    goto type_next_file;
+		  }
+		}
+		//find the file name
+		break;
+	      }
+	    type_next_file:
+	      x++;
+	    }
+	    //找到文件的情况下
+	    if (x < 224 && finfo[x].name[0] != 0x00) {
+	      y = finfo[x].size;
+	      p = (char *)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);//文件在内存中的位置
+	      cursor_x = 8;
+	      for (x = 0; x < y; x++) {
+		//逐个字符输出
+		s[0] = p[x];
+		s[1] = 0;
+		putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+		cursor_x += 8;
+		if (cursor_x == 8 + 240) {//到达最右端后换行
+		  cursor_x = 8;
+		  cursor_y = cons_newline(cursor_y, sheet);
+		}
+	      }
+	    } else {//没有找到文件
+	      putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
+	      cursor_y = cons_newline(cursor_y, sheet);
+	    }
+	    cursor_y = cons_newline(cursor_y, sheet);
 	  } else if (cmdline[0] != 0) {
 	    //其他命令
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);

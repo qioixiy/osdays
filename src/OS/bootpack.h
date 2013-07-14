@@ -24,7 +24,7 @@ struct BOOTINFO {
 struct FILEINFO {
   unsigned char name[8], ext[3], type;
   char reserve[10];
-  unsigned short time, date, clustno;
+  unsigned short time, date, clustno;//clustno代表从哪个扇区开始存放文件,磁盘镜像中的地址=clustno * 512 + 0x003e00
   unsigned int size;
 };
 
