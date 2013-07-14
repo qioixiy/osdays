@@ -152,11 +152,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		cursor_y = cons_newline(cursor_y, sheet);
 	      }
 	    }
-	  } else if (cmdline[0] == 't' &&
-		     cmdline[1] == 'y' &&
-		     cmdline[2] == 'p' &&
-		     cmdline[3] == 'e' &&
-		     cmdline[4] == ' ') {
+	  } else if (!strncmp(cmdline, "type ", 5)) {
 	    //type 
 	    //准备文件名
 	    for (y = 0; y < 11; y++) {
@@ -202,11 +198,32 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		//逐个字符输出
 		s[0] = p[x];
 		s[1] = 0;
-		putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-		cursor_x += 8;
-		if (cursor_x == 8 + 240) {//到达最右端后换行
+
+		if (s[0] == 0x09) {//制表符
+		  for (;;) {
+		    putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+		    cursor_x += 8;
+		    if (cursor_x == 8 + 240) {
+		      cursor_x = 8;
+		      cursor_y = cons_newline(cursor_y, sheet);
+		    }
+		    if (((cursor_x - 8) & 0x1f) == 0) {
+		      //被32整除就停止
+		      break;
+		    }
+		  }
+		} else if (s[0] == 0x0a) {//换行符
 		  cursor_x = 8;
 		  cursor_y = cons_newline(cursor_y, sheet);
+		} else if (s[0] == 0x0d) {//回车符
+		  ;
+		} else {
+		  putfont8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+		  cursor_x += 8;
+		  if (cursor_x == 8 + 240) {//到达最右端后换行
+		    cursor_x = 8;
+		    cursor_y = cons_newline(cursor_y, sheet);
+		  }
 		}
 	      }
 	    } else {//没有找到文件
