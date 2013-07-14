@@ -1,6 +1,9 @@
 #ifndef _BOOTPACK_H
 #define _BOOTPACK_H
 
+#include "stdio.h"
+#include "string.h"
+
 #include "naskfunc.h"
 #include "graphic.h"
 #include "dsctbl.h"
@@ -13,6 +16,8 @@
 #include "window.h"
 #include "timer.h"
 #include "mtask.h"
+#include "fat.h"
+#include "console.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
