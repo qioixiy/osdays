@@ -187,9 +187,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
   } else if (cmdline[0] != 0) {
     //不是命令，也不是空行
     if (!cmd_app(cons, fat, cmdline)) {
-      putfont8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
-      cons_newline(cons);
-      cons_newline(cons);
+      cons_putstr0(cons, "Bad command.\n\n");
     }
   }
 }
@@ -198,18 +196,10 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal)
 {
   //mem命令
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
-  struct SHEET *sheet = cons->sht;
-  char s[30];
+  char s[60];
 
-  int cursor_y = cons->cur_y;
-
-  sprintf(s, "total %dMB", memtotal/(1024*1024));
-  putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
-  cursor_y = cons_newline(cons);
-  sprintf(s, "free %dKB", memman_total(memman)/1024);
-  putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
-  cursor_y = cons_newline(cons);
-  cursor_y = cons_newline(cons);
+  sprintf(s, "total %dMB\nfree %dKB\n\n", memman_total(memman)/1024, memtotal/(1024*1024));
+  cons_putstr0(cons, s);
 
   return;
 }
@@ -244,15 +234,14 @@ void cmd_dir(struct CONSOLE *cons)
     }
     if (finfo[x].name[0] != 0xe5) {//0xe5表示文件已经被删除
       if ((finfo[x].type & 0x18) == 0) {
-	sprintf(s, "filename.ext %7d", finfo[x].size);
+	sprintf(s, "filename.ext %7d\n", finfo[x].size);
 	for (y = 0; y < 8; y++) {
 	  s[y] = finfo[x].name[y];
 	}
 	s[9] = finfo[x].ext[0];
 	s[10] = finfo[x].ext[1];
 	s[11] = finfo[x].ext[2];
-	putfont8_asc_sht(sheet, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, 30);
-	cons_newline(cons);
+	cons_putstr0(cons, s);
       }
     }
   }
@@ -274,14 +263,10 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline)
     //找到文件的情况下
     p = (char *)memman_alloc_4k(memman, finfo->size);//分配文件buffer
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-        
-    for (i = 0; i < finfo->size; i++) {
-      cons_putchar(cons, p[i], 1);
-    }
+    cons_putstr1(cons, (int)p, finfo->size);
     memman_free_4k(memman, (int)p, finfo->size);
   } else {//没有找到文件
-    putfont8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
-    cons_newline(cons);
+    cons_putstr0(cons, "File not found.\n");
   }
   cons_newline(cons);
 
@@ -401,4 +386,21 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   }
   //找到文件
   return 0;
+}
+
+void cons_putstr0(struct CONSOLE *cons, char *s)
+{
+  for (; *s != 0; s++) {
+    cons_putchar(cons, *s, 1);
+  }
+  return ;
+}
+
+void cons_putstr1(struct CONSOLE *cons, char *s, int l)
+{
+  int i;
+  for (i = 0; i < l; i++) {
+    cons_putchar(cons, s[i], 1);
+  }
+  return ;
 }
