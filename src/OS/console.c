@@ -16,24 +16,25 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
   struct TIMER *timer;
   struct TASK *task = task_now();
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	int i, fifobuf[128], *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
-	struct CONSOLE cons;
-	char cmdline[30];
-	cons.sht = sheet;
-	cons.cur_x =  8;
-	cons.cur_y = 28;
-	cons.cur_c = -1;
+  struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+  int i, fifobuf[128], *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
+  struct CONSOLE cons;
+  char cmdline[30];
+  cons.sht = sheet;
+  cons.cur_x =  8;
+  cons.cur_y = 28;
+  cons.cur_c = -1;
+  *((int *)0x0fec) = (int)&cons;
 
-	fifo32_init(&task->fifo, 128, fifobuf, task);
-	timer = timer_alloc();
-	timer_init(timer, &task->fifo, 1);
-	timer_settime(timer, 50);
-	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
-
+  fifo32_init(&task->fifo, 128, fifobuf, task);
+  timer = timer_alloc();
+  timer_init(timer, &task->fifo, 1);
+  timer_settime(timer, 50);
+  file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+  
   //ÏÔÊ¾ÌáÊ¾·û
   cons_putchar(&cons, '>', 1);
-
+  
   for (;;) {
     io_cli();
     if (fifo32_status(&task->fifo) == 0) {

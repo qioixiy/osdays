@@ -23,4 +23,5 @@ unsigned int memtest_sub(unsigned int start, unsigned int end);
 
 void farjmp(int eip, int cs);
 
+void asm_cons_putchar();
 #endif
