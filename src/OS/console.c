@@ -36,6 +36,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
   char cmdline[30];//命令行缓存
   char *p;
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
 
   int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;//初始为不闪烁
   fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -215,7 +216,45 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	      cursor_y = cons_newline(cursor_y, sheet);
 	    }
 	    cursor_y = cons_newline(cursor_y, sheet);
-	  } else if (cmdline[0] != 0) {
+	  } else if (!strcmp(cmdline, "hlt")) {
+	    //启动应用程序
+	    for (y = 0; y < 11; y++) {
+	      s[y] = ' ';
+	    }
+	    s[0] = 'H';
+	    s[1] = 'L';
+	    s[2] = 'T';
+	    s[8] = 'H';
+	    s[9] = 'R';
+	    s[10] = 'B';
+	    for (x= 0; x < 224; ) {
+	      if (finfo[x].name[0] == 0x00) {
+		break;
+	      }
+	      if ((finfo[x].type & 0x18) == 0) {
+		for (y = 0; y < 11; y++) {
+		  if (finfo[x].name[y] != s[y]) {
+		    goto hlt_next_file;
+		  }
+		}
+		break;//找到文件
+	      }
+	    hlt_next_file:
+	      x++;
+	    }
+	    //找到了文件
+	    if (x < 224 && finfo[x].name[0] != 0x00) {
+	      p = (char *)memman_alloc_4k(memman, finfo[x].size);
+	      file_loadfile(finfo[x].clustno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
+	      set_segmdesc(gdt + 1003, finfo[x].size - 1, (int)p, AR_CODE32_ER);//设置段属性
+	      farjmp(0, 1003*8);
+	      memman_free_4k(memman, (int)p, finfo[x].size);
+	    } else {
+	      //没有找到文件
+	      putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
+	      cursor_y = cons_newline(cursor_y, sheet);
+	    }
+	  }else if (cmdline[0] != 0) {
 	    //其他命令
 	    putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
 	    cursor_y = cons_newline(cursor_y, sheet);
