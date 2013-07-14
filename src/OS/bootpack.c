@@ -140,7 +140,7 @@ void HariMain(void)
 
   struct FIFO32 keycmd;//键盘控制器设定FIFO
   int keycmd_buf[32];
-  fifo32_init(&keycmd_buf, sizeof keycmd_buf, keycmd_wait, 0);
+  fifo32_init(&keycmd, sizeof(keycmd_buf), keycmd_buf, 0);
   //为了避免和键盘当前状态的冲突，在一开始先进行设置
   fifo32_put(&keycmd, KEYCMD_LED);
   fifo32_put(&keycmd, key_leds);
