@@ -347,7 +347,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   struct FILEINFO *finfo;
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
 
-  char name[18], *p;
+  char name[18], *p, *q;
   int i;
   
   //根据命令行生成文件名
@@ -374,10 +374,13 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   if (finfo != 0) {
     //找到文件
     p = (char *)memman_alloc_4k(memman, finfo->size);
+    q = (char *)memman_alloc_4k(memman, 64*1024);
+
     *((int *)0xfe8) = (int)p;//保存CS基址,代码段的起始位置
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);//设置段属性
-    
+    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);//设置段属性，代码段
+    set_segmdesc(gdt + 1004, 64*1024 - 1, (int)q, AR_DATA32_RW);//设置段可写属性，数据段
+
     //C环境支持,加入跳转头部
     if (finfo->size >= 8 &&
 	strncmp(p+4, "Hari", 4) == 0) {
@@ -389,8 +392,11 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
       p[5] = 0xcb;
     } 
 
-    farcall(0, 1003*8);
+    //farcall(0, 1003*8);
+    start_app(0, 1003*8, 64*1024, 1004*8);
+
     memman_free_4k(memman, (int)p, finfo->size);
+    memman_free_4k(memman, (int)q, 64*1024);
     cons_newline(cons);
     return 1;
   }

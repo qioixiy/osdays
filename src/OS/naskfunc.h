@@ -27,4 +27,6 @@ void farcall(int eip, int cs);
 void asm_cons_putchar();
 void asm_hrb_api();
 
+void start_app(int eip, int cs, int esp, int ds);
+
 #endif
