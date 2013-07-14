@@ -219,10 +219,12 @@ _farcall:			;void farcall(int eip, int cs);
 	GLOBAL _asm_cons_putchar
 _asm_cons_putchar:
 	STI			;，由于是通过中断请求调用，自动执行了关中断CLI,所有需要开中断
+	PUSHAD			;将全部寄存器值还原
 	PUSH 1
 	AND EAX, 0XFF		;将高位清零
 	PUSH EAX
 	PUSH DWORD [0X0FEC]	;读取内存并push该值
 	CALL _cons_putchar	;C函数调用
 	ADD ESP, 12		;将栈中的数据丢弃
+	POPAD
 	IRETD	
