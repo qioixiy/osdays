@@ -260,7 +260,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline)
     //找到文件的情况下
     p = (char *)memman_alloc_4k(memman, finfo->size);//分配文件buffer
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-    cons_putstr1(cons, (int)p, finfo->size);
+    cons_putstr1(cons, p, finfo->size);
     memman_free_4k(memman, (int)p, finfo->size);
   } else {//没有找到文件
     cons_putstr0(cons, "File not found.\n");

@@ -1,6 +1,7 @@
 [INSTRSET "i486p"]
 [BITS 32]
       MOV ECX, MSG
+      MOV EDX, 1
 PUTLOOP:
       MOV AL, [CS:ECX]
       CMP AL, 0
@@ -11,4 +12,4 @@ PUTLOOP:
 FIN:
       RETF
 MSG:
-      DB "HELLO",0
+      DB "hello",0
