@@ -208,7 +208,12 @@ mts_fin:
 _farjmp:			;void farjmp(int eip, int cs)
 	JMP FAR [ESP+4]		;eip,cs
 	RET
-	
+	GLOBAL _farcall
+_farcall:			;void farcall(int eip, int cs);
+	CALL FAR [ESP+4]	;eip, cs	
+	RET
+
+
 ;API
 	EXTERN _cons_putchar
 	GLOBAL _asm_cons_putchar
