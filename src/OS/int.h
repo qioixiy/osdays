@@ -34,11 +34,13 @@ struct KEYBUF{
 
 /* int.h */
 void init_pic(void);
+int inthandler0d(int *esp);
 void inthandler20(int *esp);
 void inthandler21(int *esp);
 void inthandler27(int *esp);
 void inthandler2c(int *esp);
 //naskfunc.nas
+void asm_inthandler0d(void);
 void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);

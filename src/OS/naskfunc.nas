@@ -88,8 +88,69 @@ _load_idtr:	;void load_idtr(int limit, int addr);
 	LIDT [ESP+6]
 	RET
 
-	GLOBAL	_asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-	EXTERN	_inthandler20, _inthandler21, _inthandler27, _inthandler2c
+	GLOBAL	_asm_inthandler0d, _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
+	EXTERN	_inthandler0d, _inthandler20, _inthandler21, _inthandler27, _inthandler2c
+
+_asm_inthandler0d:	;系统异常
+	STI
+	PUSH ES
+	PUSH DS
+	PUSHAD
+	MOV AX, SS
+	CMP AX, 1*8	;判断当前是否处于内核态
+	JNE .from_app
+;当发生在内核中
+	MOV EAX, ESP
+	PUSH SS		;保存中断时的SS
+	PUSH EAX	;保存中断时的ESP
+	MOV AX, SS
+	MOV DS, AX
+	MOV ES, AX
+	CALL _inthandler0d
+	
+	ADD ESP, 8
+	POPAD
+	POP DS
+	POP ES
+	ADD ESP, 4	;在中断0x0d中必须执行这条指令
+	IRETD
+.from_app:
+	;中断发生在应用程序过程中
+	CLI
+	MOV EAX, 1*8
+	MOV DS, AX		;先仅将DS设定为操作系统用
+	MOV ECX, [0xfe4]	;操作系统的ESP
+	ADD ECX, -8
+	MOV [ECX+4], SS		;保存中断时的SS
+	MOV [ECX],ESP		;保存中断时的ESP
+	MOV SS, AX 			
+	MOV ES, AX
+	MOV ESP, ECX
+	CALL _inthandler0d
+	CLI
+	CMP EAX, 0		;返回不是0，kill掉
+	JNE .kill
+	POP ECX
+	POP EAX
+	MOV SS, AX		;将SS设回应用程序用
+	MOV ESP, ECX		;将ESP设回应用程序用
+	POPAD
+	POP DS
+ 	POP ES
+	ADD ESP, 4		;int ox0d必须显示执行
+	IRETD
+.kill:
+;将应用程序强制结束
+	MOV EAX, 1*8		;操作系统用的SS/DS
+	MOV ES, AX
+	MOV SS, AX
+	MOV DS, AX
+	MOV FS, AX
+	MOV GS, AX
+	MOV ESP, [0X0FE4]	;强制返回到start_app是的ESP
+	STI			;切换完成后恢复中断请求
+	POPAD			;恢复之前保存的寄存器
+	RET
 	
 _asm_inthandler20:
 	PUSH ES
