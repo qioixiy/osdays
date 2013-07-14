@@ -1,10 +1,15 @@
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
-
 #include "sheet.h"
 
-int cons_newline(int cursor_y, struct SHEET *sheet);
+struct CONSOLE{
+  struct SHEET *sht;
+  int cur_x, cur_y,cur_c;
+};
+
+int cons_newline(struct CONSOLE *cons);
 void console_task(struct SHEET *sheet, unsigned int memtotal);
+void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal);
 
 #endif 
 
