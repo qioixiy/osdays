@@ -51,7 +51,7 @@ int cons_newline(int cursor_y, struct SHEET *sheet)
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
   struct FILEINFO *finfo = (struct FILEINFO *)(ADR_DISKIMG + 0x002600);
-
+  
   struct TIMER *timer;
   struct TASK *task = task_now();
   char s[30];
@@ -67,6 +67,10 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 
   //显示提示符
   putfont8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
+  
+  //fat
+  int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+  file_readfat(fat, (unsigned char *)ADR_DISKIMG + 0x000200);//从内存中读取fat，并解压
 
   int x, y;
   for (;;) {
@@ -191,12 +195,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	    }
 	    //找到文件的情况下
 	    if (x < 224 && finfo[x].name[0] != 0x00) {
-	      y = finfo[x].size;
-	      p = (char *)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);//文件在内存中的位置
+	      p = (char *)memman_alloc_4k(memman, finfo[x].size);//分配文件buffer
+	      file_loadfile(finfo[x].clustno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
 	      cursor_x = 8;
-	      for (x = 0; x < y; x++) {
+
+	      for (y = 0; y < finfo[x].size; y++) {
 		//逐个字符输出
-		s[0] = p[x];
+		s[0] = p[y];
 		s[1] = 0;
 
 		if (s[0] == 0x09) {//制表符
@@ -226,6 +231,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		  }
 		}
 	      }
+	      memman_free_4k(memman, (int)p, finfo[x].size);
 	    } else {//没有找到文件
 	      putfont8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
 	      cursor_y = cons_newline(cursor_y, sheet);

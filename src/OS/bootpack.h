@@ -13,6 +13,7 @@
 #include "window.h"
 #include "timer.h"
 #include "mtask.h"
+#include "fat.h"
 
 struct BOOTINFO {
   char cyls, leds, vmode, reserve;
