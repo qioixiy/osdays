@@ -215,16 +215,13 @@ _farcall:			;void farcall(int eip, int cs);
 
 
 ;API
-	EXTERN _cons_putchar
-	GLOBAL _asm_cons_putchar
-_asm_cons_putchar:
-	STI			;，由于是通过中断请求调用，自动执行了关中断CLI,所有需要开中断
-	PUSHAD			;将全部寄存器值还原
-	PUSH 1
-	AND EAX, 0XFF		;将高位清零
-	PUSH EAX
-	PUSH DWORD [0X0FEC]	;读取内存并push该值
-	CALL _cons_putchar	;C函数调用
-	ADD ESP, 12		;将栈中的数据丢弃
+	EXTERN _hrb_api
+	GLOBAL _asm_hrb_api
+_asm_hrb_api:
+	STI			;由于是通过中断请求调用，自动执行了关中断CLI,所有需要开中断
+	PUSHAD			;用于保存寄存器的PUSH
+	PUSHAD			;用于向hrb_api传值的PUSH
+	CALL _hrb_api
+	ADD ESP, 32		;将栈中的数据丢弃
 	POPAD
 	IRETD	

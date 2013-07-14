@@ -25,4 +25,6 @@ void farjmp(int eip, int cs);
 void farcall(int eip, int cs);
 
 void asm_cons_putchar();
+void asm_hrb_api();
+
 #endif

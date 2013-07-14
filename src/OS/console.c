@@ -223,7 +223,6 @@ void cmd_cls(struct CONSOLE *cons)
 void cmd_dir(struct CONSOLE *cons)
 {
   struct FILEINFO *finfo = (struct FILEINFO *)(ADR_DISKIMG + 0x002600);
-  struct SHEET *sheet = cons->sht;
 
   int x, y;
   char s[30];
@@ -255,9 +254,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline)
   //type 
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   struct FILEINFO *finfo = file_search(cmdline+5, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
-  
   char *p;
-  int i;
 
   if (finfo != 0) {
     //找到文件的情况下
@@ -403,4 +400,16 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l)
     cons_putchar(cons, s[i], 1);
   }
   return ;
+}
+
+void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
+{
+  struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
+  if (edx == 1) {
+    cons_putchar(cons, eax&0xff, 1);
+  } else if (edx == 2) {
+    cons_putstr0(cons, (char *)ebx);
+  } else if (edx == 3) {
+    cons_putstr1(cons, (char *)ebx, ecx);
+  }
 }
