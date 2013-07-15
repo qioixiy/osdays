@@ -4,6 +4,7 @@
 [OPTION 1]
 [BITS 32]
 	EXTERN	_api_putchar
+	EXTERN	_api_end
 [FILE "hello3.c"]
 [SECTION .text]
 	GLOBAL	_HariMain
@@ -20,7 +21,10 @@ _HariMain:
 	CALL	_api_putchar
 	PUSH	111
 	CALL	_api_putchar
+	PUSH	51
+	CALL	_api_putchar
 	PUSH	46
 	CALL	_api_putchar
+	ADD	ESP,28
 	LEAVE
-	RET
+	JMP	_api_end

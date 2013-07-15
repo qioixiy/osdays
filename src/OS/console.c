@@ -348,6 +348,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
 
   char name[18], *p, *q;
+  struct TASK *task = task_now();
   int i;
   
   //根据命令行生成文件名
@@ -378,8 +379,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 
     *((int *)0xfe8) = (int)p;//保存CS基址,代码段的起始位置
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);//设置段属性，代码段
-    set_segmdesc(gdt + 1004, 64*1024 - 1, (int)q, AR_DATA32_RW);//设置段可写属性，数据段
+    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER+0x60);//设置段属性，代码段,加上0x60表示是应用程序所有
+    set_segmdesc(gdt + 1004, 64*1024 - 1,     (int)q, AR_DATA32_RW+0x60);//设置段可写属性，数据段
 
     //C环境支持,加入跳转头部
     if (finfo->size >= 8 &&
@@ -393,7 +394,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
     } 
 
     //farcall(0, 1003*8);
-    start_app(0, 1003*8, 64*1024, 1004*8);
+    start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
 
     memman_free_4k(memman, (int)p, finfo->size);
     memman_free_4k(memman, (int)q, 64*1024);
@@ -421,9 +422,10 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l)
   return ;
 }
 
-void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
+int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
 {
   int cs_base = *((int *)0xfe8);//取得CS基址,代码段的起始位置
+  struct TASK *task = task_now();
   struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
   if (edx == 1) {
     cons_putchar(cons, eax&0xff, 1);
@@ -431,13 +433,18 @@ void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
     cons_putstr0(cons, (char *)ebx + cs_base);
   } else if (edx == 3) {
     cons_putstr1(cons, (char *)ebx + cs_base, ecx);
+  } else if (edx == 4) {
+    return &(task->tss.esp0);
   }
+  return 0;
 }
 
 //异常处理
 int inthandler0d(int *esp)
 {
   struct CONSOLE *cons = (struct CONSOLE *)*((int *)0x0fec);
+  struct TASK *task = task_now();
+
   cons_putstr0(cons, "\nINT 0D:\n General Protected Exception.\n");
-  return 1;//强制结束
+  return &(task->tss.esp0);//让应用程序强制结束
 }

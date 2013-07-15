@@ -10,6 +10,7 @@ PUTLOOP:
       ADD ECX, 1
       JMP PUTLOOP
 FIN:
-      RETF
+      MOV EDX, 4
+      INT 0X40
 MSG:
-      DB "hello",0
+      DB "hello.nas",0

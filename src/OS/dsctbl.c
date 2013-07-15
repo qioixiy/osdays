@@ -27,7 +27,7 @@ void init_gdtidt(void)
   set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 * 8, AR_INTGATE32);
   set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 * 8, AR_INTGATE32);
   set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 * 8, AR_INTGATE32);
-  set_gatedesc(idt + 0x40, (int) asm_hrb_api, 2 * 8, AR_INTGATE32);//注册系统API入口
+  set_gatedesc(idt + 0x40, (int) asm_hrb_api, 	   2 * 8, AR_INTGATE32+0x60);//注册系统API入口,+0x60运行应用程序调用
 
 
   load_idtr(0x7ff, 0x0026f800);
