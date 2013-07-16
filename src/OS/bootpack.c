@@ -247,6 +247,16 @@ void HariMain(void)
 	  sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
 	  sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
 	}
+	
+	if (i == 256 + 0x3b && key_shift != 0 && task_cons->tss.ss0 != 0) {//shift+F1,结束应用程序
+	  struct CONSOLE *cons = (struct CONSOLE *)*((int *)0x0fec);
+	  cons_putstr0(cons,"Break(KEY)\n");
+	  io_cli();//修改寄存器时禁止中断
+	  task_cons->tss.eax = (int)&(task_cons->tss.esp0);
+	  task_cons->tss.eip = (int)asm_end_app;
+	  io_sti();
+	}
+
 	//重新显示光标
 	if (cursor_c >= 0) {
 	  boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);

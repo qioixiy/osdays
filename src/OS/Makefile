@@ -20,7 +20,6 @@ DEL      = $(TOOLPATH)del
 OBJS	 = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj \
 	mouse.obj keyboard.obj memory.obj sheet.obj window.obj timer.obj mtask.obj fat.obj console.obj
 
-
 default:
 	$(MAKE) img
 
@@ -100,7 +99,7 @@ crack6.hrb: crack6.nas Makefile
 
 haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makefile $(OBJS)\
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
-	bug1.hrb 
+	bug1.hrb bug2.hrb
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
 	wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	copy from:haribote.sys to:@: \
@@ -117,6 +116,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makef
 	copy from:crack5.hrb to:@: \
 	copy from:crack6.hrb to:@: \
 	copy from:bug1.hrb to:@: \
+	copy from:bug2.hrb to:@: \
 	imgout:haribote.img
 
 img:

@@ -28,5 +28,6 @@ void asm_cons_putchar();
 void asm_hrb_api();
 
 void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
+void asm_end_app(void);
 
 #endif

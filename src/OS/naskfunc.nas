@@ -282,6 +282,13 @@ end_app:
 	POPAD
 	RET			;返回cmd_app
 	
+	GLOBAL _asm_end_app
+_asm_end_app:
+;EAX为tss.esp0的地址
+	MOV ESP, [EAX]
+	MOV DWORD [EAX+4], 0
+	POPAD
+	RET
 
 ;APP start
         GLOBAL _start_app
