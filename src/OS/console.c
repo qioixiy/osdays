@@ -441,7 +441,21 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
   return 0;
 }
 
-//异常处理
+//栈异常处理
+int inthandler0c(int *esp)
+{
+  struct CONSOLE *cons = (struct CONSOLE *)*((int *)0x0fec);
+  struct TASK *task = task_now();
+  char s[30];
+
+  cons_putstr0(cons, "\nINT 0C:\n Stack Exception.\n");
+  sprintf(s, "EIP = %08X\n", esp[11]);
+  cons_putstr0(cons, s);
+
+  return &(task->tss.esp0);//让应用程序强制结束
+}
+
+//一般异常处理
 int inthandler0d(int *esp)
 {
   struct CONSOLE *cons = (struct CONSOLE *)*((int *)0x0fec);

@@ -88,8 +88,28 @@ _load_idtr:	;void load_idtr(int limit, int addr);
 	LIDT [ESP+6]
 	RET
 
-	GLOBAL	_asm_inthandler0d, _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-	EXTERN	_inthandler0d, _inthandler20, _inthandler21, _inthandler27, _inthandler2c
+	GLOBAL	_asm_inthandler0c, _asm_inthandler0d, _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
+	EXTERN	_inthandler0c, _inthandler0d, _inthandler20, _inthandler21, _inthandler27, _inthandler2c
+
+_asm_inthandler0c:	;栈异常
+	STI
+	PUSH ES
+	PUSH DS
+	PUSHAD
+	MOV EAX, ESP
+	PUSH EAX
+	MOV AX, SS
+	MOV DS, AX
+	MOV ES, AX
+	CALL _inthandler0c
+	CMP EAX, 0
+	JNE end_app
+	POP EAX
+	POPAD
+	POP DS
+	POP ES
+	ADD ESP, 4
+	IRETD
 
 _asm_inthandler0d:	;系统异常
 	STI
