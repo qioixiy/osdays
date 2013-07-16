@@ -434,8 +434,8 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
   } else if (edx == 3) {
     cons_putstr1(cons, (char *)ebx + cs_base, ecx);
   } else if (edx == 4) {
-    return &(task->tss.esp0);
-  } else if (edx == 12345678) {
+    return (int)&(task->tss.esp0);
+  } else if (edx == (int)12345678) {
     *((char *)0x00102600) = 0;
   }
   return 0;
@@ -452,7 +452,7 @@ int inthandler0c(int *esp)
   sprintf(s, "EIP = %08X\n", esp[11]);
   cons_putstr0(cons, s);
 
-  return &(task->tss.esp0);//让应用程序强制结束
+  return (int)&(task->tss.esp0);//让应用程序强制结束
 }
 
 //一般异常处理
@@ -462,5 +462,5 @@ int inthandler0d(int *esp)
   struct TASK *task = task_now();
 
   cons_putstr0(cons, "\nINT 0D:\n General Protected Exception.\n");
-  return &(task->tss.esp0);//让应用程序强制结束
+  return (int)&(task->tss.esp0);//让应用程序强制结束
 }

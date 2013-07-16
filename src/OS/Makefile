@@ -88,15 +88,17 @@ crack5.hrb: crack5.nas Makefile
 crack6.hrb: crack6.nas Makefile
 	$(NASK) crack6.nas crack6.hrb crack6.lst
 #bug
-bug1.bim: bug1.obj a_nask.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:bug1.bim map:bug1.map bug1.obj a_nask.obj
-bug1.hrb: bug1.bim Makefile
-	$(BIM2HRB) bug1.bim bug1.hrb 0
-
+#bug1.bim: bug1.obj a_nask.obj Makefile
+#	$(OBJ2BIM) @$(RULEFILE) out:bug1.bim map:bug1.map bug1.obj a_nask.obj
+#bug1.hrb: bug1.bim Makefile
+#	$(BIM2HRB) bug1.bim bug1.hrb 0
+%.hrb: %.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:$*.bim map:$*.map $*.obj a_nask.obj
+	$(BIM2HRB) $*.bim $*.hrb 0
 
 #C app end
 
-haribote.img : ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makefile $(OBJS)\
+haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makefile $(OBJS)\
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
 	bug1.hrb 
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
