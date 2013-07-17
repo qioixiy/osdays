@@ -97,7 +97,7 @@ crack6.hrb: crack6.nas Makefile
 
 #C app end
 
-haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makefile $(OBJS)\
+haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb a.hrb Makefile $(OBJS)\
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
 	bug1.hrb bug2.hrb bug3.hrb
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
@@ -108,6 +108,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb a.hrb Makef
 	copy from:hello.hrb to:@: \
 	copy from:hello2.hrb to:@: \
 	copy from:hello3.hrb to:@: \
+	copy from:hello4.hrb to:@: \
 	copy from:a.hrb to:@: \
 	copy from:crack1.hrb to:@: \
 	copy from:crack2.hrb to:@: \

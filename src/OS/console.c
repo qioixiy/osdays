@@ -385,16 +385,10 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
     //C环境支持,加入跳转头部
     if (finfo->size >= 8 &&
 	strncmp(p+4, "Hari", 4) == 0) {//支持Hari格式的应用程序
-      p[0] = 0xe8;
-      p[1] = 0x16;
-      p[2] = 0x00;
-      p[3] = 0x00;
-      p[4] = 0x00;
-      p[5] = 0xcb;
-    } 
-
-    //farcall(0, 1003*8);
-    start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+      start_app(0x1b, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+    } else {
+      start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+    }
 
     memman_free_4k(memman, (int)p, finfo->size);
     memman_free_4k(memman, (int)q, 64*1024);
