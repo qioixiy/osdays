@@ -432,7 +432,6 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
   int cs_base = *((int *)0xfe8);//取得CS基址,代码段的起始位置
   struct TASK *task = task_now();
   struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
-  char s[20];
 
   if (edx == 1) {
     cons_putchar(cons, eax&0xff, 1);
