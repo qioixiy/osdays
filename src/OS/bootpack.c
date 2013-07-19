@@ -69,6 +69,7 @@ void HariMain(void)
   //图层控制器初始化
   struct SHTCTL *shtctl;
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+  *((int *)0x0fe4) = (int)shtctl;//保存shtctl供其他用
 
   struct SHEET *sht_back, *sht_mouse, *sht_win;//背景和鼠标图层
   sht_back = sheet_alloc(shtctl);
