@@ -373,25 +373,36 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
   }
 
   if (finfo != 0) {
+    int segsiz, datsiz, esp, dathrb;
+
     //找到文件
     p = (char *)memman_alloc_4k(memman, finfo->size);
-    q = (char *)memman_alloc_4k(memman, 64*1024);
 
     *((int *)0xfe8) = (int)p;//保存CS基址,代码段的起始位置
     file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER+0x60);//设置段属性，代码段,加上0x60表示是应用程序所有
-    set_segmdesc(gdt + 1004, 64*1024 - 1,     (int)q, AR_DATA32_RW+0x60);//设置段可写属性，数据段
-
-    //C环境支持,加入跳转头部
-    if (finfo->size >= 8 &&
-	strncmp(p+4, "Hari", 4) == 0) {//支持Hari格式的应用程序
-      start_app(0x1b, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+    if (finfo->size >= 36 &&
+	strncmp(p+4, "Hari", 4) == 0 &&
+	*p == 0x00) {
+      segsiz = *((int *)(p + 0x0000));
+      esp = *((int *)(p + 0x000c));
+      datsiz = *((int *)(p + 0x0010));
+      dathrb = *((int *)(p + 0x0014));
+      q = (char *)memman_alloc_4k(memman, segsiz);//申请数据段内存
+      *((int *)0xfe8) = (int)q;
+      
+      set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER+0x60);//设置段属性，代码段,加上0x60表示是应用程序所有
+      set_segmdesc(gdt + 1004, segsiz - 1,     (int)q, AR_DATA32_RW+0x60);//设置段可写属性，数据段
+      
+      for (i = 0; i < datsiz; i++) {//复制hrb数据段信息到正确的内存位置
+	q[esp+i] = p[dathrb + i];
+      }
+      start_app(0x1b, 1003*8, esp, 1004*8, &(task->tss.esp0));
+      memman_free_4k(memman, (int)q, segsiz);//释放数据段空间
     } else {
-      start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+      cons_putstr0(cons, ".hrb file format error!\n");
     }
 
     memman_free_4k(memman, (int)p, finfo->size);
-    memman_free_4k(memman, (int)q, 64*1024);
     cons_newline(cons);
     return 1;
   }
@@ -426,9 +437,9 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
   if (edx == 1) {
     cons_putchar(cons, eax&0xff, 1);
   } else if (edx == 2) {
-    //cons_putstr0(cons, (char *)ebx + cs_base);
-    sprintf(s, "%08X", ebx);
-    cons_putstr0(cons, s);
+    cons_putstr0(cons, (char *)ebx + cs_base);
+    //sprintf(s, "%08X", ebx);
+    //cons_putstr0(cons, s);
   } else if (edx == 3) {
     cons_putstr1(cons, (char *)ebx + cs_base, ecx);
   } else if (edx == 4) {
