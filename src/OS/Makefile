@@ -105,7 +105,7 @@ hello5.hrb: hello5.obj Makefile
 haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb hello5.hrb a.hrb Makefile $(OBJS)\
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
 	bug1.hrb bug2.hrb bug3.hrb\
-	winhello.hrb
+	winhelo.hrb winhelo2.hrb
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
 	wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	copy from:haribote.sys to:@: \
@@ -126,7 +126,8 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb 
 	copy from:bug1.hrb to:@: \
 	copy from:bug2.hrb to:@: \
 	copy from:bug3.hrb to:@: \
-	copy from:winhello.hrb to:@: \
+	copy from:winhelo.hrb to:@: \
+	copy from:winhelo2.hrb to:@: \
 	imgout:haribote.img
 
 img:

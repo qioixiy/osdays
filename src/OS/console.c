@@ -437,6 +437,7 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 
   int *reg = &eax + 1;//强行改写通过PUSHAD保存的值
   /*reg[0]:EDI,....reg[7]:EAX*/
+  static int x = 0, y = 0;
 
   if (edx == 1) {
     cons_putchar(cons, eax&0xff, 1);
@@ -452,11 +453,17 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
     sht = sheet_alloc(shtctl);
     sheet_setbuf(sht, (char *)ebx+ds_base, esi, edi, eax);
     make_window8((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
-    sheet_slide(sht, 100, 50);
+    sheet_slide(sht, 100+x++, 50+y++);
     sheet_updown(sht, 3);//
     reg[7] = (int)sht;//返回值
-  } else {
-    
+  } else if (edx == 6){
+    sht = (struct SHEET *)ebx;
+    putfont8_asc(sht->buf, sht->bxsize, esi, edi, eax, (char *)ebp+ds_base);
+    sheet_refresh(sht, esi, edi, esi+ecx*8, edi+16);
+  } else if (edx == 7) {
+    sht = (struct SHEET *)ebx;
+    boxfill8(sht->buf, sht->bxsize, ebp, eax, ecx, esi, edi);
+    sheet_refresh(sht, eax, ecx, esi+1, edi+1);
   }
   return 0;
 }
