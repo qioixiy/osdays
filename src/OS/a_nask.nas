@@ -21,7 +21,7 @@ _api_end:	;void api_end(void);
       MOV EDX, 4
       INT 0X40     
 	
-_api_putstr0:	;api_putstr0(char *s)
+_api_putstr0:	;void api_putstr0(char *s)
 	PUSH EBX
 	MOV EDX, 2
 	MOV EBX, [ESP+8]	;s
@@ -85,3 +85,39 @@ _api_boxfilwin:	;int api_boxfilwin(int win, int x0, int y0, int x1, int y1, int 
 	POP ESI
 	POP EDI
 	RET	
+	
+;malloc start
+	GLOBAL _api_initmalloc
+	GLOBAL _api_malloc
+	GLOBAL _api_free
+_api_initmalloc:	;void api_initmalloc(void)
+	PUSH EBX
+	MOV EDX, 8
+	MOV EBX, [CS:0X0020]	;malloc内存空间的地址
+	MOV EAX, EBX
+	ADD EAX, 32*1024	;加上32KB
+	MOV ECX, [CS:0X0000]	;数据段的大小
+	SUB ECX, EAX
+	INT 0X40
+	POP EBX
+	RET
+	
+_api_malloc:		;char *api_malloc(int size)
+	PUSH EBX
+	MOV EDX, 9
+	MOV EBX, [CS:0X0020]
+	MOV ECX, [ESP+8]	;size
+	INT 0X40
+	POP EBX
+	RET
+
+_api_free:		;void api_free(char *addr, int size)
+	PUSH EBX
+	MOV EDX, 10
+	MOV EBX, [CS:0X0020]
+	MOV EAX, [ESP+8]	;addr	
+	MOV ECX, [ESP+12]	;size
+	INT 0X40
+	POP EBX
+	RET
+;malloc end

@@ -91,7 +91,7 @@ crack6.hrb: crack6.nas Makefile
 #	$(OBJ2BIM) @$(RULEFILE) out:bug1.bim map:bug1.map bug1.obj a_nask.obj
 #bug1.hrb: bug1.bim Makefile
 #	$(BIM2HRB) bug1.bim bug1.hrb 0
-%.hrb: %.obj a_nask.obj Makefile
+%.hrb: %.obj a_nask.obj api.h Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:$*.bim map:$*.map $*.obj a_nask.obj
 	$(BIM2HRB) $*.bim $*.hrb 0
 
@@ -105,7 +105,7 @@ hello5.hrb: hello5.obj Makefile
 haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb hello5.hrb a.hrb Makefile $(OBJS)\
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
 	bug1.hrb bug2.hrb bug3.hrb\
-	winhelo.hrb winhelo2.hrb
+	winhelo.hrb winhelo2.hrb winhelo3.hrb
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
 	wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	copy from:haribote.sys to:@: \
@@ -128,6 +128,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb 
 	copy from:bug3.hrb to:@: \
 	copy from:winhelo.hrb to:@: \
 	copy from:winhelo2.hrb to:@: \
+	copy from:winhelo3.hrb to:@: \
 	imgout:haribote.img
 
 img:
