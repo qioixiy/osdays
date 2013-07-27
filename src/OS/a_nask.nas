@@ -121,3 +121,20 @@ _api_free:		;void api_free(char *addr, int size)
 	POP EBX
 	RET
 ;malloc end
+
+	GLOBAL _api_point
+_api_point:		;void api_point(int win, int x, int y, int col)
+	PUSH EDI
+	PUSH ESI
+	PUSH EBX
+	MOV EDX, 11	
+	MOV EBX, [ESP+16];win
+	MOV ESI, [ESP+20];x
+	MOV EDI, [ESP+24];y
+	MOV EAX, [ESP+28];col
+	INT 0X40
+	POP EBX
+	POP ESI
+	POP EDI
+	RET
+

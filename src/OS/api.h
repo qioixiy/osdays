@@ -12,4 +12,6 @@ void api_initmalloc(void);
 char *api_malloc(int size);
 void api_free(char *addr, int size);
 
+void api_point(int win, int x, int y, int col);//col:É«ºÅ
+
 #endif
