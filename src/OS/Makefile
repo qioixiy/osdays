@@ -106,7 +106,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb 
 	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
 	bug1.hrb bug2.hrb bug3.hrb\
 	winhelo.hrb winhelo2.hrb winhelo3.hrb\
-	star1.hrb starts.hrb
+	star1.hrb starts.hrb stars2.hrb
 	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
 	wbinimg src:ipl10.bin len:512 from:0 to:0 \
 	copy from:haribote.sys to:@: \
@@ -132,6 +132,7 @@ haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb 
 	copy from:winhelo3.hrb to:@: \
 	copy from:star1.hrb to:@: \
 	copy from:starts.hrb to:@: \
+	copy from:stars2.hrb to:@: \
 	imgout:haribote.img
 
 img:
