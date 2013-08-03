@@ -405,7 +405,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
       shtctl = (struct SHTCTL *)*((int *)0x0fe4);
       for (i = 0; i < MAX_SHEETS; i++) {
 	sht = &(shtctl->sheets0[i]);
-	if (sht->flags != 0 && sht->task == task) {
+	if ((sht->flags & 0x11) == 0x11 && 
+	    sht->task == task) {
 	  //找到应用程序遗留的sheet
 	  sheet_free(sht);
 	}
@@ -466,6 +467,7 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
   } else if (edx == 5) {
     sht = sheet_alloc(shtctl);
     sht->task = task;//将当前task与sheet相关联
+    sht->flags |= 0x10;//打开窗口自动关闭的功能
     sheet_setbuf(sht, (char *)ebx+ds_base, esi, edi, eax);
     make_window8((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
     sheet_slide(sht, 100+x++, 50+y++);
