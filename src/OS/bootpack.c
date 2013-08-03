@@ -320,7 +320,6 @@ void HariMain(void)
 	  static struct SHEET *sht = 0;
 	  if ((mdec.btn & 0x01) != 0) {//鼠标左键按
 	    //按照从上到下的顺序寻找鼠标所指向的图层
-
 	    if (mmx < 0) {
 	      for (j = shtctl->top-1; j > 0; j--) {
 		sht = shtctl->sheets[j];
@@ -333,6 +332,12 @@ void HariMain(void)
 		    y < sht->bysize) {
 		  if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {//图层此处不是透明色
 		    sheet_updown(sht, shtctl->top - 1);//将sht图层提升最上层
+		    if (sht != key_win) {
+		      cursor_c = keywin_off(key_win, sht_win, cursor_c, cursor_x);
+		      key_win = sht;
+		      cursor_c = keywin_on(key_win, sht_win, cursor_c);
+		    }
+
 		    if (3 <= x && x < sht->bxsize - 3 &&
 			3 <= y && y < 21 ) {//光标处于标题栏
 		      mmx = mx;
@@ -341,7 +346,7 @@ void HariMain(void)
 		    
 		    if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 &&
 			5 <= y && y < 19) {//光标处于X位置,并点击
-		      if ((sht->flags & 0x10) != 0) {//窗口为某应用程序
+		      if ((sht->flags & 0x10) != 0) {//窗口为某应用程序的
 			struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
 			cons_putstr0(cons, "\nBreak(mouse) :\n");
 			io_cli();//强制结束处理中禁止切换任务
