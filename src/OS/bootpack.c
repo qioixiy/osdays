@@ -333,6 +333,18 @@ void HariMain(void)
 		      mmx = mx;
 		      mmy = my;
 		    }
+		    
+		    if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 &&
+			5 <= y && y < 19) {//光标处于X位置,并点击
+		      if (sht->task != 0) {//窗口为某应用程序的
+			struct CONSOLE *cons = (struct CONSOLE *)*((int *)0xfec);
+			cons_putstr0(cons, "\nBreak(mouse) :\n");
+			io_cli();//强制结束处理中禁止切换任务
+			task_cons->tss.eax = (int)&(task_cons->tss.esp0);
+			task_cons->tss.eip = (int)asm_end_app;
+			io_sti();
+		      }
+		    }
 		    break;
 		  }
 		}
