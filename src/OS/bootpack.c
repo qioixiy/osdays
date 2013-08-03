@@ -310,26 +310,44 @@ void HariMain(void)
 	  //滑动鼠标显示，包含sheet_reflush
 	  sheet_slide(sht_mouse, mx, my);
 	  
+	  static int j, x, y;
+	  static int mmx = -1, mmy = -1;
+	  static struct SHEET *sht = 0;
 	  if ((mdec.btn & 0x01) != 0) {//鼠标左键按
 	    //按照从上到下的顺序寻找鼠标所指向的图层
-	    int j, x, y;
-	    struct SHEET * sht;
 
-	    for (j = shtctl->top-1; j > 0; j--) {
-	      sht = shtctl->sheets[j];
-	      x = mx - sht->vx0;
-	      y = my - sht->vy0;
-	      
-	      if (0 <= x &&//鼠标在sheet图层内,因为是从最上层开始查看就没有问题。
-		  x < sht->bxsize &&
-		  0 <= y &&
-		  y < sht->bysize) {
-		if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {//图层此处不是透明色
-		  sheet_updown(sht, shtctl->top - 1);//将sht图层提升最上层
-		  break;
+	    if (mmx < 0) {
+	      for (j = shtctl->top-1; j > 0; j--) {
+		sht = shtctl->sheets[j];
+		x = mx - sht->vx0;
+		y = my - sht->vy0;
+		
+		if (0 <= x &&//鼠标在sheet图层内,因为是从最上层开始查看就没有问题。
+		    x < sht->bxsize &&
+		    0 <= y &&
+		    y < sht->bysize) {
+		  if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {//图层此处不是透明色
+		    sheet_updown(sht, shtctl->top - 1);//将sht图层提升最上层
+		    if (3 <= x && x < sht->bxsize - 3 &&
+			3 <= y && y < 21 ) {//光标处于标题栏
+		      mmx = mx;
+		      mmy = my;
+		    }
+		    break;
+		  }
 		}
 	      }
+	    } else {
+	      //如果已经处于move mode
+	      x = mx - mmx;
+	      y = my - mmy;
+	      sheet_slide(sht, sht->vx0 + x, sht->vy0 + y);
+	      mmx = mx;//更新移动后的坐标
+	      mmy = my;
 	    }
+	  } else {
+	    //没有按下键
+	    mmx = -1;
 	  }
 	}
       } else if (10 == i) {//10s timer
