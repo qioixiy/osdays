@@ -31,6 +31,6 @@ void HariMain(void)
     api_putstrwin(win, x, y, 3/*yellow*/, 1, "*");
   }
 
-  api_closewin(win);
+  //api_closewin(win);now, the app can close window auto.
   api_end();
 }

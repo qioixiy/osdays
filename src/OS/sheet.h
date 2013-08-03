@@ -9,6 +9,7 @@ struct SHEET{
   int col_inv;//透明色色号
   int height;//图层高度
   int flags;//图层有关的设定信息
+  struct TASK *task;//图层相关的任务
 
   struct SHTCTL *ctl;//sheet control member with the sheet
 };
