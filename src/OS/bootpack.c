@@ -311,7 +311,25 @@ void HariMain(void)
 	  sheet_slide(sht_mouse, mx, my);
 	  
 	  if ((mdec.btn & 0x01) != 0) {//鼠标左键按
-	    sheet_slide(sht_win, mx-80, my-8);
+	    //按照从上到下的顺序寻找鼠标所指向的图层
+	    int j, x, y;
+	    struct SHEET * sht;
+
+	    for (j = shtctl->top-1; j > 0; j--) {
+	      sht = shtctl->sheets[j];
+	      x = mx - sht->vx0;
+	      y = my - sht->vy0;
+	      
+	      if (0 <= x &&//鼠标在sheet图层内,因为是从最上层开始查看就没有问题。
+		  x < sht->bxsize &&
+		  0 <= y &&
+		  y < sht->bysize) {
+		if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {//图层此处不是透明色
+		  sheet_updown(sht, shtctl->top - 1);//将sht图层提升最上层
+		  break;
+		}
+	      }
+	    }
 	  }
 	}
       } else if (10 == i) {//10s timer
