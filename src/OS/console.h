@@ -5,6 +5,7 @@
 struct CONSOLE{
   struct SHEET *sht;
   int cur_x, cur_y,cur_c;
+  struct TIMER *timer;
 };
 
 int cons_newline(struct CONSOLE *cons);

@@ -183,3 +183,11 @@ _api_closewin:		;void api_closewin(int win)
 	INT 0X40
 	POP EBX
 	RET
+
+	GLOBAL _api_getkey
+_api_getkey:		;int api_getkey(int mode)
+	MOV EDX, 15
+	MOV EAX, [ESP+4];mode
+	INT 0X40
+	RET
+	
