@@ -17,4 +17,10 @@ void api_refreshwin(int win, int x0, int y0, int x1, int y1);
 
 int api_getkey(int mode);
 
+//timer api
+int api_alloctimer(void);
+void api_inittimer(int timer, int data);
+void api_settimer(int timer, int time);
+void api_freetimer(int timer);
+
 #endif

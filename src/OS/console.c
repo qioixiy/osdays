@@ -537,11 +537,19 @@ int hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
       if (i == 3) {
 	cons->cur_c = -1;//光标OFF
       }
-      if (256 <= i && i <= 511) {//键盘数据，通过task A得到
+      if (i >= 256) {//键盘数据，通过task A得到
 	reg[7] = i - 256;
 	return 0;
       }
     }
+  } else if (edx == 16) {//分配一个timer
+    reg[7] = (int)timer_alloc();//reg[7]为返回值
+  } else if (edx == 17) {//init timer
+    timer_init((struct TIMER*)ebx, &task->fifo, eax + 256);
+  } else if (edx == 18) {
+    timer_settime((struct TIMER *)ebx, eax);
+  }else if (edx == 19) {//free timer
+    timer_free((struct TIMER*)ebx);
   }
   return 0;
 }
