@@ -9,7 +9,7 @@ struct CONSOLE{
 };
 
 int cons_newline(struct CONSOLE *cons);
-void console_task(struct SHEET *sheet, unsigned int memtotal);
+void console_task(struct SHEET *sheet, unsigned int memtotal, struct SHEET *sheet_back);
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal);
 
 void cons_putstr0(struct CONSOLE *cons, char *s);

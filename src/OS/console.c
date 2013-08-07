@@ -16,7 +16,9 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
 static void hrb_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);
 
 #define putfonts8_asc_sht putfont8_asc_sht
-void console_task(struct SHEET *sheet, unsigned int memtotal)
+
+struct SHEET *sheet_desktop = 0;
+void console_task(struct SHEET *sheet, unsigned int memtotal, struct SHEET *sheet_back)
 {
   struct TASK *task = task_now();
   struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -28,6 +30,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
   cons.cur_y = 28;
   cons.cur_c = -1;
   *((int *)0x0fec) = (int)&cons;
+  sheet_desktop = sheet_back;
+  putfont8_asc_sht(sheet_desktop, 0, 20, COL8_FFFFFF, COL8_008484, "console Start", strlen("console Start"));
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
   cons.timer = timer_alloc();

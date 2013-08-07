@@ -113,7 +113,7 @@ void HariMain(void)
   make_window8(buf_cons,256, 165, "console", 0);
   make_textbox8(sht_cons, 8, 28, 240, 128, COL8_000000);
   task_cons = task_alloc();//·ÖÅäÒ»¸ötask struct
-  task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -12;
+  task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 -16;
   task_cons->tss.eip = (int)&console_task;
   task_cons->tss.es = 1*8;
   task_cons->tss.cs = 2*8;
@@ -123,6 +123,7 @@ void HariMain(void)
   task_cons->tss.gs = 1*8;
   *((int *)(task_cons->tss.esp+4)) = (int)sht_cons;
   *((int *)(task_cons->tss.esp+8)) = (int)memtotal;
+  *((int *)(task_cons->tss.esp+12)) = (int)sht_back;
   task_run(task_cons, 2, 2);//level=2,priority=2
 
   sheet_slide(sht_back, 0, 0);
