@@ -1,199 +1,202 @@
-;haribote-os boot asm
-;TAB=4
+; haribote-os boot asm
+; TAB=4
 
-[INSTRSET "i486p"];EAX可用
+[INSTRSET "i486p"]
 
-BOTPAK	EQU 0X00280000
-DSKCAC	EQU 0X00100000
-DSKCAC0 EQU 0X00008000
+VBEMODE	EQU		0x105			; 1024 x  768 x 8bit僇儔乕
+; 乮夋柺儌乕僪堦棗乯
+;	0x100 :  640 x  400 x 8bit僇儔乕
+;	0x101 :  640 x  480 x 8bit僇儔乕
+;	0x103 :  800 x  600 x 8bit僇儔乕
+;	0x105 : 1024 x  768 x 8bit僇儔乕
+;	0x107 : 1280 x 1024 x 8bit僇儔乕
 
-;有关BOOT_INFO
-CYLS	EQU 0X0FF0	;设定启动区
-LEDS 	EQU 0X0FF1
-VMODE	EQU 0X0FF2	;关于颜色数目的信息
-SCRNX	EQU 0X0FF4	;分辨率的X
-SCRNY	EQU 0X0FF6	;分辨率的Y
-VRAM	EQU 0X0FF8 	;图像缓冲区的开始位置
-FNAME 	EQU 0xA600  	;镜像中文件name
+BOTPAK	EQU		0x00280000		; bootpack偺儘乕僪愭
+DSKCAC	EQU		0x00100000		; 僨傿僗僋僉儍僢僔儏偺応強
+DSKCAC0	EQU		0x00008000		; 僨傿僗僋僉儍僢僔儏偺応強乮儕傾儖儌乕僪乯
 
-;	0x100 :  640 x  400 x 8bit
-;	0x101 :  640 x  480 x 8bit
-;	0x103 :  800 x  600 x 8bit
-;	0x105 : 1024 x  768 x 8bit
-;	0x107 : 1280 x 1024 x 8bit
+; BOOT_INFO娭學
+CYLS	EQU		0x0ff0			; 僽乕僩僙僋僞偑愝掕偡傞
+LEDS	EQU		0x0ff1
+VMODE	EQU		0x0ff2			; 怓悢偵娭偡傞忣曬丅壗價僢僩僇儔乕偐丠
+SCRNX	EQU		0x0ff4			; 夝憸搙偺X
+SCRNY	EQU		0x0ff6			; 夝憸搙偺Y
+VRAM	EQU		0x0ff8			; 僌儔僼傿僢僋僶僢僼傽偺奐巒斣抧
 
-VBEMODE EQU 0X100      ;分辨率会影响系统的速度，越大越快
-;编译后的文件放在0X4200处，在内存的位置为0X8000+0X4200=0XC200
-;程序装载的位置
-	org 0xc200	 	
+		ORG		0xc200			; 偙偺僾儘僌儔儉偑偳偙偵撉傒崬傑傟傞偺偐
 
-;判断是否存在VBE支持
-	mov ax, 0x9000
-	mov es, ax
-	mov di, 0
-	mov ax, 0x4f00
-	int 0x10
-	cmp ax, 0x004f
-	jne scrn320
-;检查VBE的版本
-	mov ax, [es:di+4]
-	cmp ax, 0x0200
-	jb scrn320
+; VBE懚嵼妋擣
 
-;取得画面模式信息
-	mov cx, VBEMODE
-	mov ax, 0x4f01
-	int 0x10
-	cmp ax, 0x004f
-	jne scrn320
+		MOV		AX,0x9000
+		MOV		ES,AX
+		MOV		DI,0
+		MOV		AX,0x4f00
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
 
-;画面模式的确认
-	cmp byte [es:di+0x19], 8
-	jne scrn320
-	cmp byte [es:di+0x1b], 4
-	jne scrn320
-	mov ax, [es:di+0x00]
-	and ax, 0x0080
-	jz scrn320	;模式属性的bit7是0，所以放弃
+; VBE偺僶乕僕儑儞僠僃僢僋
 
-;画面模式的切换
-	mov bx, VBEMODE+0x4000
-	mov ax, 0x4f02
-	int 0x10
-	mov byte [VMODE], 8 ;记下画面模式
-	mov ax, [es:di+0x12]
-	mov [SCRNX], ax
-	mov ax, [es:di+0x14]
-	mov [SCRNY], ax
-	mov eax, [es:di+0x28]
-	mov [VRAM], eax
-	jmp keystatus
+		MOV		AX,[ES:DI+4]
+		CMP		AX,0x0200
+		JB		scrn320			; if (AX < 0x0200) goto scrn320
+
+; 夋柺儌乕僪忣曬傪摼傞
+
+		MOV		CX,VBEMODE
+		MOV		AX,0x4f01
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
+
+; 夋柺儌乕僪忣曬偺妋擣
+
+		CMP		BYTE [ES:DI+0x19],8
+		JNE		scrn320
+		CMP		BYTE [ES:DI+0x1b],4
+		JNE		scrn320
+		MOV		AX,[ES:DI+0x00]
+		AND		AX,0x0080
+		JZ		scrn320			; 儌乕僪懏惈偺bit7偑0偩偭偨偺偱偁偒傜傔傞
+
+; 夋柺儌乕僪偺愗傝懼偊
+
+		MOV		BX,VBEMODE+0x4000
+		MOV		AX,0x4f02
+		INT		0x10
+		MOV		BYTE [VMODE],8	; 夋柺儌乕僪傪儊儌偡傞乮C尵岅偑嶲徠偡傞乯
+		MOV		AX,[ES:DI+0x12]
+		MOV		[SCRNX],AX
+		MOV		AX,[ES:DI+0x14]
+		MOV		[SCRNY],AX
+		MOV		EAX,[ES:DI+0x28]
+		MOV		[VRAM],EAX
+		JMP		keystatus
 
 scrn320:
-	mov al, 0x13 	;vga显卡设置，320x200x8位彩色
-	mov ah, 0x00 	;
-	int 0x10
-	mov byte[VMODE], 8	;记录画面模式
-	mov	word[SCRNX], 320
-	mov	word[SCRNY], 200
-	mov dword[VRAM],0x000a0000
+		MOV		AL,0x13			; VGA僌儔僼傿僢僋僗丄320x200x8bit僇儔乕
+		MOV		AH,0x00
+		INT		0x10
+		MOV		BYTE [VMODE],8	; 夋柺儌乕僪傪儊儌偡傞乮C尵岅偑嶲徠偡傞乯
+		MOV		WORD [SCRNX],320
+		MOV		WORD [SCRNY],200
+		MOV		DWORD [VRAM],0x000a0000
+
+; 僉乕儃乕僪偺LED忬懺傪BIOS偵嫵偊偰傕傜偆
 
 keystatus:
-;用bios取得键盘上各种LED指示灯的状态
-	MOV AH, 0X02
-	INT 0X16	;keyboard bios
-	MOV [LEDS], AL
+		MOV		AH,0x02
+		INT		0x16 			; keyboard BIOS
+		MOV		[LEDS],AL
 
-;PIC关闭所有中断，根据AT兼容机的规格，如果要初始化PIC
-;必须在CKI之前进行，否则有时会挂起，随后进行PIC初始化
-	MOV AL, 0XFF
-	OUT 0X21, AL
-	NOP		;如果连续执行有些机型无法正常运行
-	OUT 0XA1, AL
-	CLI		;禁止CPU级别的中断
+; PIC偑堦愗偺妱傝崬傒傪庴偗晅偗側偄傛偆偵偡傞
+;	AT屳姺婡偺巇條偱偼丄PIC偺弶婜壔傪偡傞側傜丄
+;	偙偄偮傪CLI慜偵傗偭偰偍偐側偄偲丄偨傑偵僴儞僌傾僢僾偡傞
+;	PIC偺弶婜壔偼偁偲偱傗傞
 
-;为了让CPU能够访问1MB以上的内存空间，设定A20GATE
-	CALL WAITKBDOUT
-	MOV AL, 0XD1
-	OUT 0X64, AL
-	CALL WAITKBDOUT
-	MOV AL, 0XDF	;ENABLE A20
-	OUT 0X60, AL
-	CALL WAITKBDOUT
+		MOV		AL,0xff
+		OUT		0x21,AL
+		NOP						; OUT柦椷傪楢懕偝偣傞偲偆傑偔偄偐側偄婡庬偑偁傞傜偟偄偺偱
+		OUT		0xa1,AL
 
-;切换到保护模式
-[INSTRSET "i486p"]		;要使用486指令的说明
-	  LGDT [GDTR0]		;设定临时的GDT
-	  MOV EAX, CR0
-	  AND EAX, 0X7FFFFFFF	;设置bit31为0，禁止×
-	  OR  EAX, 0X00000001	;设置bit0为1，切换到保护模式
-	  MOV CR0, EAX
-	  JMP PIPELINEFLUSH
+		CLI						; 偝傜偵CPU儗儀儖偱傕妱傝崬傒嬛巭
 
-PIPELINEFLUSH:
-	MOV AX, 1*8		;可读写的段
-	MOV DS, AX
-	MOV ES, AX
-	MOV FS, AX
-	MOV GS, AX
-	MOV SS, AX
+; CPU偐傜1MB埲忋偺儊儌儕偵傾僋僙僗偱偒傞傛偆偵丄A20GATE傪愝掕
 
-;backpack的传送
-	MOV ESI, bootpack	;转送源
-	MOV EDI, BOTPAK		;转送目的地
-	MOV ECX, 512*1024/4
-	CALL memcpy
+		CALL	waitkbdout
+		MOV		AL,0xd1
+		OUT		0x64,AL
+		CALL	waitkbdout
+		MOV		AL,0xdf			; enable A20
+		OUT		0x60,AL
+		CALL	waitkbdout
 
-;磁盘数据最终传到它本来的位置去
+; 僾儘僥僋僩儌乕僪堏峴
 
-;首先从启动扇区开始
-	MOV ESI, 0X7C00		;转送源
-	MOV EDI, DSKCAC		;转送目的地
-	MOV ECX, 512/4
-	CALL memcpy
+		LGDT	[GDTR0]			; 巄掕GDT傪愝掕
+		MOV		EAX,CR0
+		AND		EAX,0x7fffffff	; bit31傪0偵偡傞乮儁乕僕儞僌嬛巭偺偨傔乯
+		OR		EAX,0x00000001	; bit0傪1偵偡傞乮僾儘僥僋僩儌乕僪堏峴偺偨傔乯
+		MOV		CR0,EAX
+		JMP		pipelineflush
+pipelineflush:
+		MOV		AX,1*8			;  撉傒彂偒壜擻僙僌儊儞僩32bit
+		MOV		DS,AX
+		MOV		ES,AX
+		MOV		FS,AX
+		MOV		GS,AX
+		MOV		SS,AX
 
-;所有剩下的数据
-	MOV ESI, DSKCAC0+512	;转送源
-	MOV EDI, DSKCAC+512	;转送目的地
-	MOV ECX, 0
-	MOV CL, BYTE [CYLS]
-	IMUL ECX, 512*18*2/4	;从柱面数变换为字节数/4，因为是32位模式4字节
-	SUB ECX, 512/4		;减掉IPL部分
-	CALL memcpy
+; bootpack偺揮憲
 
-;asmhead， 说明见Page157
-;必须由asmhead完成的工作，到此全部完毕，以后就交由bootpack继续
+		MOV		ESI,bootpack	; 揮憲尦
+		MOV		EDI,BOTPAK		; 揮憲愭
+		MOV		ECX,512*1024/4
+		CALL	memcpy
 
-;系统的内存分布：P158
-;0x00000000-0x000fffff	在启动时多次用到，有BIOS，VRAM等内容，但最后为空了（1M）
-;0x00100000-0x00267fff	用于保存软盘内容，（1440KB）
-;0x00268000-0x0026f7ff	空（30KB）
-;0x0026f800-0x0026ffff	IDT（2KB）
-;0x00270000-0x0027ffff	GDT（64KB）
-;0x00280000-0x002fffff	bootpack.hrb（512KB）
-;0x00300000-0x003fffff	栈和其他用途（1M）
-;0x00400000-...		空
+; 偮偄偱偵僨傿僗僋僨乕僞傕杮棃偺埵抲傊揮憲
 
-;bootpack的启动
-	MOV EBX, BOTPAK
-	MOV ECX, [EBX+16]
-	ADD ECX, 3		;ECX += 3
-	SHR ECX, 2		;ECX /=4
-	JZ  SKIP 		;没有要传送的东西时
-	MOV ESI, [EBX+20]	;转送源
-	ADD ESI, EBX
-	MOV EDI, [EBX+12]	;转送目的地
-	CALL 	 memcpy
+; 傑偢偼僽乕僩僙僋僞偐傜
 
-SKIP:
-	MOV ESP, [EBX+12]	;栈初始值
-	JMP DWORD 2*8:0X0000001B;跳转到bootpack入口处
+		MOV		ESI,0x7c00		; 揮憲尦
+		MOV		EDI,DSKCAC		; 揮憲愭
+		MOV		ECX,512/4
+		CALL	memcpy
 
-WAITKBDOUT:			;
-	IN AL, 0X64
-	AND AL, 0X02
-	IN  AL, 0X60		;空读，为了清除数据接收的缓存区中的垃圾数据
-	JNZ WAITKBDOUT		;如果AND的结果不是0就跳转到WAITKBOOT
-	RET
+; 巆傝慡晹
+
+		MOV		ESI,DSKCAC0+512	; 揮憲尦
+		MOV		EDI,DSKCAC+512	; 揮憲愭
+		MOV		ECX,0
+		MOV		CL,BYTE [CYLS]
+		IMUL	ECX,512*18*2/4	; 僔儕儞僟悢偐傜僶僀僩悢/4偵曄姺
+		SUB		ECX,512/4		; IPL偺暘偩偗嵎偟堷偔
+		CALL	memcpy
+
+; asmhead偱偟側偗傟偽偄偗側偄偙偲偼慡晹偟廔傢偭偨偺偱丄
+;	偁偲偼bootpack偵擟偣傞
+
+; bootpack偺婲摦
+
+		MOV		EBX,BOTPAK
+		MOV		ECX,[EBX+16]
+		ADD		ECX,3			; ECX += 3;
+		SHR		ECX,2			; ECX /= 4;
+		JZ		skip			; 揮憲偡傞傋偒傕偺偑側偄
+		MOV		ESI,[EBX+20]	; 揮憲尦
+		ADD		ESI,EBX
+		MOV		EDI,[EBX+12]	; 揮憲愭
+		CALL	memcpy
+skip:
+		MOV		ESP,[EBX+12]	; 僗僞僢僋弶婜抣
+		JMP		DWORD 2*8:0x0000001b
+
+waitkbdout:
+		IN		 AL,0x64
+		AND		 AL,0x02
+		JNZ		waitkbdout		; AND偺寢壥偑0偱側偗傟偽waitkbdout傊
+		RET
 
 memcpy:
-	MOV EAX, [ESI]
-	ADD ESI, 4
-	MOV [EDI], EAX
-	ADD EDI, 4
-	SUB ECX, 1
-	JNZ memcpy		;如果减法运算结果不是0，就跳转到memcpy
-	RET
+		MOV		EAX,[ESI]
+		ADD		ESI,4
+		MOV		[EDI],EAX
+		ADD		EDI,4
+		SUB		ECX,1
+		JNZ		memcpy			; 堷偒嶼偟偨寢壥偑0偱側偗傟偽memcpy傊
+		RET
+; memcpy偼傾僪儗僗僒僀僘僾儕僼傿僋僗傪擖傟朰傟側偗傟偽丄僗僩儕儞僌柦椷偱傕彂偗傞
 
-	ALIGNB 16
+		ALIGNB	16
 GDT0:
-	RESB 8			;NULL SELECTOR
-	DW   0XFFFF, 0X0000, 0X9200, 0X00CF	;可以读写的segment(段)32位， seg1
-	DW   0XFFFF, 0X0000, 0X9A28, 0X0047	;可以执行的segment(段)32位（bootpack用） seg2
-	DW   0
+		RESB	8				; 僰儖僙儗僋僞
+		DW		0xffff,0x0000,0x9200,0x00cf	; 撉傒彂偒壜擻僙僌儊儞僩32bit
+		DW		0xffff,0x0000,0x9a28,0x0047	; 幚峴壜擻僙僌儊儞僩32bit乮bootpack梡乯
+
+		DW		0
 GDTR0:
-	DW 8*3-1
-	DD GDT0
-	
-	ALIGNB	16
+		DW		8*3-1
+		DD		GDT0
+
+		ALIGNB	16
 bootpack:

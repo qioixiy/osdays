@@ -1,109 +1,105 @@
-;hello-os
-;tab=4
-	CYLS EQU 10	;10个柱面
-	ORG 0X7C00	;指明程序的装载地址
+; haribote-ipl
+; TAB=4
 
-;以下的记述用于标准fat12格式的磁盘
-	JMP ENTRY
-	DB 0X90
-	DB "HELLOIPL"  ;启动区的名称可以是任意的字符串
-	DW 512	       ;每个扇区（sector）的大小（必须为512字节）
-	DB 1	       ;簇（cluster）的大小（必须为）一个扇区
-	DW 1	       ;fat的启始位置（一般从第一个扇区开始）
-	DB 2	       ;fat的个数（必须为2）
-	DW 224	       ;根目录的大小（一般设成224）
-	DW 2880	       ;该磁盘的大小（必须为2880）
-	DB 0XF0	       ;磁盘的种类（必须为0xf0）
-	DW 9	       ;fat的长度（必须是9个扇区）
-	DW 18	       ;1个磁道有几个扇区（必须为18）
-	DW 2	       ;磁头数（必须是2）
-	DD 0	       ;不使用分区，必须是0
-	DD 2880	       ;重写一次磁盘大小
-	DB 0,0,0X29    ;意义不明，固定
-	DD 0XFFFFFFFF  ;标卷号码
-	DB "HELLO-OS   ";磁盘的名称（11字节）
-	DB "FAT12   "  ;磁盘格式的名称（8字节）
-	RESB 18	       ;先空出18字节
+CYLS	EQU		10				; 偳偙傑偱撉傒崬傓偐
 
-;程序核心
-ENTRY:
-	MOV AX, 0	;初始化寄存器
-	MOV SS, AX
-	MOV SP, 0X7C00
-	MOV DS, AX
+		ORG		0x7c00			; 偙偺僾儘僌儔儉偑偳偙偵撉傒崬傑傟傞偺偐
 
-;一张软盘：80柱面，2个磁头，18扇区，一个扇区有512字节
-;80*2*18*512字节=1474560字节=1440KB=1.44MB
-;读磁盘
- 	MOV AX, 0X0820	;ES:BX=缓冲地址,ES*16+BX
-	MOV ES, AX	;ES=0X0820
-	MOV CH, 0	;柱面0
-	MOV DH, 0	;磁头0
-	MOV CL, 2	;扇区2,扇区1bios自动读取
+; 埲壓偼昗弨揑側FAT12僼僅乕儅僢僩僼儘僢僺乕僨傿僗僋偺偨傔偺婰弎
 
-READLOOP:
-	MOV SI, 0	;记录失败次数的寄存器
+		JMP		entry
+		DB		0x90
+		DB		"HARIBOTE"		; 僽乕僩僙僋僞偺柤慜傪帺桼偵彂偄偰傛偄乮8僶僀僩乯
+		DW		512				; 1僙僋僞偺戝偒偝乮512偵偟側偗傟偽偄偗側偄乯
+		DB		1				; 僋儔僗僞偺戝偒偝乮1僙僋僞偵偟側偗傟偽偄偗側偄乯
+		DW		1				; FAT偑偳偙偐傜巒傑傞偐乮晛捠偼1僙僋僞栚偐傜偵偡傞乯
+		DB		2				; FAT偺屄悢乮2偵偟側偗傟偽偄偗側偄乯
+		DW		224				; 儖乕僩僨傿儗僋僩儕椞堟偺戝偒偝乮晛捠偼224僄儞僩儕偵偡傞乯
+		DW		2880			; 偙偺僪儔僀僽偺戝偒偝乮2880僙僋僞偵偟側偗傟偽偄偗側偄乯
+		DB		0xf0			; 儊僨傿傾偺僞僀僾乮0xf0偵偟側偗傟偽偄偗側偄乯
+		DW		9				; FAT椞堟偺挿偝乮9僙僋僞偵偟側偗傟偽偄偗側偄乯
+		DW		18				; 1僩儔僢僋偵偄偔偮偺僙僋僞偑偁傞偐乮18偵偟側偗傟偽偄偗側偄乯
+		DW		2				; 僿僢僪偺悢乮2偵偟側偗傟偽偄偗側偄乯
+		DD		0				; 僷乕僥傿僔儑儞傪巊偭偰側偄偺偱偙偙偼昁偢0
+		DD		2880			; 偙偺僪儔僀僽戝偒偝傪傕偆堦搙彂偔
+		DB		0,0,0x29		; 傛偔傢偐傜側偄偗偳偙偺抣偵偟偰偍偔偲偄偄傜偟偄
+		DD		0xffffffff		; 偨傇傫儃儕儏乕儉僔儕傾儖斣崋
+		DB		"HARIBOTEOS "	; 僨傿僗僋偺柤慜乮11僶僀僩乯
+		DB		"FAT12   "		; 僼僅乕儅僢僩偺柤慜乮8僶僀僩乯
+		RESB	18				; 偲傝偁偊偢18僶僀僩偁偗偰偍偔
 
-;尝试读取磁盘
-RETRY:
-	MOV AH, 0X02	;AH=0X02,读盘
-	MOV AL, 1	;1个扇区
-	MOV BX, 0	;BX=0,ES*16+BX=0X0820*16+0=0X8200,0X8000-0X81FF这512字节留给启动区
-	MOV DL, 0X00	;A驱动器
-	INT 0X13	;调用磁盘bios
-	JNC NEXT	;没有错的话跳转到NEXT
-	ADD SI, 1	;失败次数加1
-	CMP SI, 5	;比较SI与5
-	JAE ERROR	;SI>=5,跳转到ERROR
-	MOV AH, 0X00
-	MOV DL, 0X00	;A驱动器
-	INT 0X13	;重置驱动器
-	JMP RETRY
-;读取下一个扇区
-NEXT:
-	MOV AX, ES	;把内存地址后移0X200
-	ADD AX, 0X0020
-	MOV ES, AX	;因为没有ADD ES, 0X20指令，不能直接操作ES寄存器，所以这里绕了下
-	ADD CL, 1
-	CMP CL, 18	;如果18个扇区没有读取完，继续
-	JBE READLOOP
-	MOV CL, 1
-	ADD DH, 1
-	CMP DH, 2	;读取两个磁头
-	JB READLOOP	;
-	MOV DH, 0
-	ADD CH, 1
-	CMP CH, CYLS	
-	JB READLOOP	;读取两个柱面
-	
-	MOV [0X0FF0], CH;保持CH[CYLS=10]到内存0xff0处
-;无条件跳转到0xc200，执行haribote.sys
-	JMP 0XC200
+; 僾儘僌儔儉杮懱
 
-ERROR:
-	MOV SI, MSG
+entry:
+		MOV		AX,0			; 儗僕僗僞弶婜壔
+		MOV		SS,AX
+		MOV		SP,0x7c00
+		MOV		DS,AX
 
-PUTLOOP:
-	MOV AL, [SI]
-	ADD SI, 1	;给si+1
-	CMP AL, 0
+; 僨傿僗僋傪撉傓
 
-	JE FIN
-	MOV AH,0X0E	;显示一个文字
-	MOV BX, 15	;指定字符颜色
-	INT 0X10	;调用显卡bios
-	JMP PUTLOOP
+		MOV		AX,0x0820
+		MOV		ES,AX
+		MOV		CH,0			; 僔儕儞僟0
+		MOV		DH,0			; 僿僢僪0
+		MOV		CL,2			; 僙僋僞2
+readloop:
+		MOV		SI,0			; 幐攕夞悢傪悢偊傞儗僕僗僞
+retry:
+		MOV		AH,0x02			; AH=0x02 : 僨傿僗僋撉傒崬傒
+		MOV		AL,1			; 1僙僋僞
+		MOV		BX,0
+		MOV		DL,0x00			; A僪儔僀僽
+		INT		0x13			; 僨傿僗僋BIOS屇傃弌偟
+		JNC		next			; 僄儔乕偑偍偒側偗傟偽next傊
+		ADD		SI,1			; SI偵1傪懌偡
+		CMP		SI,5			; SI偲5傪斾妑
+		JAE		error			; SI >= 5 偩偭偨傜error傊
+		MOV		AH,0x00
+		MOV		DL,0x00			; A僪儔僀僽
+		INT		0x13			; 僪儔僀僽偺儕僙僢僩
+		JMP		retry
+next:
+		MOV		AX,ES			; 傾僪儗僗傪0x200恑傔傞
+		ADD		AX,0x0020
+		MOV		ES,AX			; ADD ES,0x020 偲偄偆柦椷偑側偄偺偱偙偆偟偰偄傞
+		ADD		CL,1			; CL偵1傪懌偡
+		CMP		CL,18			; CL偲18傪斾妑
+		JBE		readloop		; CL <= 18 偩偭偨傜readloop傊
+		MOV		CL,1
+		ADD		DH,1
+		CMP		DH,2
+		JB		readloop		; DH < 2 偩偭偨傜readloop傊
+		MOV		DH,0
+		ADD		CH,1
+		CMP		CH,CYLS
+		JB		readloop		; CH < CYLS 偩偭偨傜readloop傊
 
-FIN:
-	HLT		;让cpu停止，等待指令
-	JMP FIN		;无限循环
+; 撉傒廔傢偭偨偺偱haribote.sys傪幚峴偩両
 
-MSG:
-	DB 0X0A, 0X0A	;换行两次
-	DB "LOAD ERROR"
-	DB 0X0A		;换行
-	DB 0
+		MOV		[0x0ff0],CH		; IPL偑偳偙傑偱撉傫偩偺偐傪儊儌
+		JMP		0xc200
 
-	RESB 0X7DFE-$
+error:
+		MOV		SI,msg
+putloop:
+		MOV		AL,[SI]
+		ADD		SI,1			; SI偵1傪懌偡
+		CMP		AL,0
+		JE		fin
+		MOV		AH,0x0e			; 堦暥帤昞帵僼傽儞僋僔儑儞
+		MOV		BX,15			; 僇儔乕僐乕僪
+		INT		0x10			; 價僨僆BIOS屇傃弌偟
+		JMP		putloop
+fin:
+		HLT						; 壗偐偁傞傑偱CPU傪掆巭偝偣傞
+		JMP		fin				; 柍尷儖乕僾
+msg:
+		DB		0x0a, 0x0a		; 夵峴傪2偮
+		DB		"load error"
+		DB		0x0a			; 夵峴
+		DB		0
 
-	DB 0X55, 0XAA
+		RESB	0x7dfe-$		; 0x7dfe傑偱傪0x00偱杽傔傞柦椷
+
+		DB		0x55, 0xaa

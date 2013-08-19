@@ -1,158 +1,208 @@
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj \
+		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj timer.obj \
+		mtask.obj window.obj console.obj file.obj
+
 TOOLPATH = ../../tools/z_tools/
-INCPATH	 = ../../tools/z_tools/haribote/
+INCPATH  = ../../tools/z_tools/haribote/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
-
-CC1	 = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
+CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
-BIM2HRB  = $(TOOLPATH)bim2hrb.exe
 MAKEFONT = $(TOOLPATH)makefont.exe
 BIN2OBJ  = $(TOOLPATH)bin2obj.exe
+BIM2HRB  = $(TOOLPATH)bim2hrb.exe
 RULEFILE = $(TOOLPATH)haribote/haribote.rul
-
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = $(TOOLPATH)copy
 DEL      = $(TOOLPATH)del
 
-OBJS	 = bootpack.obj naskfunc.obj hankaku.obj graphic.obj dsctbl.obj int.obj fifo.obj \
-	mouse.obj keyboard.obj memory.obj sheet.obj window.obj timer.obj mtask.obj fat.obj console.obj
+# デフォルト動作
 
-default:
+default :
 	$(MAKE) img
+
+# ファイル生成規則
 
 ipl10.bin : ipl10.nas Makefile
-	@$(NASK) ipl10.nas ipl10.bin ipl10.lst
+	$(NASK) ipl10.nas ipl10.bin ipl10.lst
 
-asmhead.bin: asmhead.nas Makefile
-	@$(NASK) asmhead.nas asmhead.bin asmhead.lst
+asmhead.bin : asmhead.nas Makefile
+	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
-%.gas: %.c *.h Makefile
-	@$(CC1) -o $*.gas $*.c
-%.nas: %.gas Makefile
-	@$(GAS2NASK) $*.gas -o $*.nas 
-%.obj: %.nas Makefile
-	$(NASK) $*.nas $*.obj $*.lst
+hankaku.bin : hankaku.txt Makefile
+	$(MAKEFONT) hankaku.txt hankaku.bin
 
-naskfunc.obj: naskfunc.nas Makefile
-	@$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+hankaku.obj : hankaku.bin Makefile
+	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
 
-hankaku.bin: hankaku.txt Makefile
-	@$(MAKEFONT) hankaku.txt hankaku.bin
-hankaku.obj: hankaku.bin Makefile
-	@$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
+bootpack.bim : $(OBJS_BOOTPACK) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
+		$(OBJS_BOOTPACK)
+# 3MB+64KB=3136KB
 
-bootpack.bim: $(OBJS) Makefile
-	@$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map $(OBJS)
+bootpack.hrb : bootpack.bim Makefile
+	$(BIM2HRB) bootpack.bim bootpack.hrb 0
 
-#3MB+64KB=3136KB
-bootpack.hrb: bootpack.bim Makefile 
-	@$(BIM2HRB) bootpack.bim bootpack.hrb 0
+haribote.sys : asmhead.bin bootpack.hrb Makefile
+	copy /B asmhead.bin+bootpack.hrb haribote.sys
 
-haribote.sys: asmhead.bin bootpack.hrb Makefile $(OBJS)
-	@copy /B asmhead.bin+bootpack.hrb haribote.sys
-
-#Appliction
-hello.hrb: hello.nas Makefile
+hello.hrb : hello.nas Makefile
 	$(NASK) hello.nas hello.hrb hello.lst
-hello2.hrb: hello2.nas Makefile
+
+hello2.hrb : hello2.nas Makefile
 	$(NASK) hello2.nas hello2.hrb hello2.lst
 
-#C app start
-a.bim: a.obj a_nask.obj Makefile
+a.bim : a.obj a_nask.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj a_nask.obj
-a.hrb: a.bim Makefile
+
+a.hrb : a.bim Makefile
 	$(BIM2HRB) a.bim a.hrb 0
 
-hello3.bim: hello3.obj a_nask.obj Makefile
+hello3.bim : hello3.obj a_nask.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:hello3.bim map:hello3.map hello3.obj a_nask.obj
-hello3.hrb: hello3.bim Makefile
+
+hello3.hrb : hello3.bim Makefile
 	$(BIM2HRB) hello3.bim hello3.hrb 0
 
-#crack
-crack1.bim: crack1.obj a_nask.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:crack1.bim map:crack1.map crack1.obj a_nask.obj
-crack1.hrb: crack1.bim Makefile
-	$(BIM2HRB) crack1.bim crack1.hrb 0
-crack2.hrb: crack2.nas Makefile
-	$(NASK) crack2.nas crack2.hrb crack2.lst
-crack3.hrb: crack3.nas Makefile
-	$(NASK) crack3.nas crack3.hrb crack3.lst
-crack4.hrb: crack4.nas Makefile
-	$(NASK) crack4.nas crack4.hrb crack4.lst
-crack5.hrb: crack5.nas Makefile
-	$(NASK) crack5.nas crack5.hrb crack5.lst
-crack6.hrb: crack6.nas Makefile
-	$(NASK) crack6.nas crack6.hrb crack6.lst
-#bug
-#bug1.bim: bug1.obj a_nask.obj Makefile
-#	$(OBJ2BIM) @$(RULEFILE) out:bug1.bim map:bug1.map bug1.obj a_nask.obj
-#bug1.hrb: bug1.bim Makefile
-#	$(BIM2HRB) bug1.bim bug1.hrb 0
-%.hrb: %.obj a_nask.obj api.h Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:$*.bim map:$*.map $*.obj a_nask.obj
-	$(BIM2HRB) $*.bim $*.hrb 0
+hello4.bim : hello4.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:hello4.bim stack:1k map:hello4.map \
+		hello4.obj a_nask.obj
 
-#hrb
-hello5.hrb: hello5.obj Makefile
+hello4.hrb : hello4.bim Makefile
+	$(BIM2HRB) hello4.bim hello4.hrb 0
+
+hello5.bim : hello5.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:hello5.bim stack:1k map:hello5.map hello5.obj
+
+hello5.hrb : hello5.bim Makefile
 	$(BIM2HRB) hello5.bim hello5.hrb 0
 
-#C app end
+winhelo.bim : winhelo.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:winhelo.bim stack:1k map:winhelo.map \
+		winhelo.obj a_nask.obj
 
-haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb hello3.hrb hello4.hrb hello5.hrb a.hrb Makefile $(OBJS)\
-	crack1.hrb crack2.hrb crack3.hrb crack4.hrb crack5.hrb crack6.hrb \
-	bug1.hrb bug2.hrb bug3.hrb\
-	winhelo.hrb winhelo2.hrb winhelo3.hrb\
-	star1.hrb starts.hrb stars2.hrb\
-	lines.hrb walk.hrb\
-	noodle.hrb
-	$(EDIMG) imgin:$(TOOLPATH)/fdimg0at.tek \
-	wbinimg src:ipl10.bin len:512 from:0 to:0 \
-	copy from:haribote.sys to:@: \
-	copy from:ipl10.nas to:@: \
-	copy from:make.bat to:@: \
-	copy from:hello.hrb to:@: \
-	copy from:hello2.hrb to:@: \
-	copy from:hello3.hrb to:@: \
-	copy from:hello4.hrb to:@: \
-	copy from:hello5.hrb to:@: \
-	copy from:a.hrb to:@: \
-	copy from:crack1.hrb to:@: \
-	copy from:crack2.hrb to:@: \
-	copy from:crack3.hrb to:@: \
-	copy from:crack4.hrb to:@: \
-	copy from:crack5.hrb to:@: \
-	copy from:crack6.hrb to:@: \
-	copy from:bug1.hrb to:@: \
-	copy from:bug2.hrb to:@: \
-	copy from:bug3.hrb to:@: \
-	copy from:winhelo.hrb to:@: \
-	copy from:winhelo2.hrb to:@: \
-	copy from:winhelo3.hrb to:@: \
-	copy from:star1.hrb to:@: \
-	copy from:starts.hrb to:@: \
-	copy from:stars2.hrb to:@: \
-	copy from:lines.hrb to:@: \
-	copy from:walk.hrb to:@: \
-	copy from:noodle.hrb to:@: \
-	imgout:haribote.img
+winhelo.hrb : winhelo.bim Makefile
+	$(BIM2HRB) winhelo.bim winhelo.hrb 0
 
-img:
-	@$(MAKE) haribote.img
+winhelo2.bim : winhelo2.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:winhelo2.bim stack:1k map:winhelo2.map \
+		winhelo2.obj a_nask.obj
 
-run:
+winhelo2.hrb : winhelo2.bim Makefile
+	$(BIM2HRB) winhelo2.bim winhelo2.hrb 0
+
+winhelo3.bim : winhelo3.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:winhelo3.bim stack:1k map:winhelo3.map \
+		winhelo3.obj a_nask.obj
+
+winhelo3.hrb : winhelo3.bim Makefile
+	$(BIM2HRB) winhelo3.bim winhelo3.hrb 40k
+
+star1.bim : star1.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:star1.bim stack:1k map:star1.map \
+		star1.obj a_nask.obj
+
+star1.hrb : star1.bim Makefile
+	$(BIM2HRB) star1.bim star1.hrb 47k
+
+stars.bim : stars.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:stars.bim stack:1k map:stars.map \
+		stars.obj a_nask.obj
+
+stars.hrb : stars.bim Makefile
+	$(BIM2HRB) stars.bim stars.hrb 47k
+
+stars2.bim : stars2.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:stars2.bim stack:1k map:stars2.map \
+		stars2.obj a_nask.obj
+
+stars2.hrb : stars2.bim Makefile
+	$(BIM2HRB) stars2.bim stars2.hrb 47k
+
+lines.bim : lines.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:lines.bim stack:1k map:lines.map \
+		lines.obj a_nask.obj
+
+lines.hrb : lines.bim Makefile
+	$(BIM2HRB) lines.bim lines.hrb 48k
+
+walk.bim : walk.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:walk.bim stack:1k map:walk.map \
+		walk.obj a_nask.obj
+
+walk.hrb : walk.bim Makefile
+	$(BIM2HRB) walk.bim walk.hrb 48k
+
+noodle.bim : noodle.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim stack:1k map:noodle.map \
+		noodle.obj a_nask.obj
+
+noodle.hrb : noodle.bim Makefile
+	$(BIM2HRB) noodle.bim noodle.hrb 40k
+
+haribote.img : ipl10.bin haribote.sys Makefile \
+		hello.hrb hello2.hrb a.hrb hello3.hrb hello4.hrb hello5.hrb \
+		winhelo.hrb winhelo2.hrb winhelo3.hrb star1.hrb stars.hrb stars2.hrb \
+		lines.hrb walk.hrb noodle.hrb
+	$(EDIMG)   imgin:../../tools/z_tools/fdimg0at.tek \
+		wbinimg src:ipl10.bin len:512 from:0 to:0 \
+		copy from:haribote.sys to:@: \
+		copy from:ipl10.nas to:@: \
+		copy from:make.bat to:@: \
+		copy from:hello.hrb to:@: \
+		copy from:hello2.hrb to:@: \
+		copy from:a.hrb to:@: \
+		copy from:hello3.hrb to:@: \
+		copy from:hello4.hrb to:@: \
+		copy from:hello5.hrb to:@: \
+		copy from:winhelo.hrb to:@: \
+		copy from:winhelo2.hrb to:@: \
+		copy from:winhelo3.hrb to:@: \
+		copy from:star1.hrb to:@: \
+		copy from:stars.hrb to:@: \
+		copy from:stars2.hrb to:@: \
+		copy from:lines.hrb to:@: \
+		copy from:walk.hrb to:@: \
+		copy from:noodle.hrb to:@: \
+		imgout:haribote.img
+
+# 一般規則
+
+%.gas : %.c bootpack.h Makefile
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+# コマンド
+
+img :
+	$(MAKE) haribote.img
+
+run :
 	$(MAKE) img
-	copy haribote.img ..\..\tools\z_tools\qemu\fdimage0.bin
-	$(MAKE) -C $(TOOLPATH)\qemu
+	$(COPY) haribote.img ..\..\tools\z_tools\qemu\fdimage0.bin
+	$(MAKE) -C ../../tools/z_tools/qemu
 
-clean:
-	-rm  *.gas *.obj *.hrb *.bim *.map *.bin *.lst *~ *# *.img *.sys
-	-rm bootpack.nas
+install :
+	$(MAKE) img
+	$(IMGTOL) w a: haribote.img
 
-cls src_only:
+clean :
+	-$(DEL) *.bin
+	-$(DEL) *.lst
+	-$(DEL) *.obj
+	-$(DEL) *.map
+	-$(DEL) *.bim
+	-$(DEL) *.hrb
+	-$(DEL) haribote.sys
+
+cls src_only :
 	$(MAKE) clean
 	-$(DEL) haribote.img
-	-$(DEL) haribote.sys

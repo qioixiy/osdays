@@ -1,69 +1,78 @@
-#include "mouse.h"
-#include "keyboard.h"
-#include "naskfunc.h"
-#include "int.h"
+/* 儅僂僗娭學 */
 
-//鼠标设置
-#define KEYCMD_SENDTO_MOUSE 0Xd4
-#define MOUSECMD_ENABLE 0Xf4
+#include "bootpack.h"
+
+struct FIFO32 *mousefifo;
+int mousedata0;
+
+void inthandler2c(int *esp)
+/* PS/2儅僂僗偐傜偺妱傝崬傒 */
+{
+	int data;
+	io_out8(PIC1_OCW2, 0x64);	/* IRQ-12庴晅姰椆傪PIC1偵捠抦 */
+	io_out8(PIC0_OCW2, 0x62);	/* IRQ-02庴晅姰椆傪PIC0偵捠抦 */
+	data = io_in8(PORT_KEYDAT);
+	fifo32_put(mousefifo, data + mousedata0);
+	return;
+}
+
+#define KEYCMD_SENDTO_MOUSE		0xd4
+#define MOUSECMD_ENABLE			0xf4
 
 void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec)
 {
-  mousefifo = fifo;
-  mousedata0 = data0;
-  
-  //激活鼠标
-  wait_KBC_sendready();
-  io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
-  wait_KBC_sendready();
-  io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-
-  mdec->phase = 0;//正常情况下键盘控制器会返回0xfa
-  return;
+	/* 彂偒崬傒愭偺FIFO僶僢僼傽傪婰壇 */
+	mousefifo = fifo;
+	mousedata0 = data0;
+	/* 儅僂僗桳岠 */
+	wait_KBC_sendready();
+	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+	wait_KBC_sendready();
+	io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+	/* 偆傑偔偄偔偲ACK(0xfa)偑憲怣偝傟偰偔傞 */
+	mdec->phase = 0; /* 儅僂僗偺0xfa傪懸偭偰偄傞抜奒 */
+	return;
 }
 
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned int data)
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 {
-  int res = 0;
-
-  if (0 == mdec->phase ) {
-    //等待鼠标的0xfa状态
-    if (data == 0xfa) {
-      mdec->phase = 1;
-    }
-    res = 0;
-  }else if(1 == mdec->phase){
-    //等待鼠标的第一个字节
-    if (0x08 == (data & 0xC8)) {//第一个字节正确？
-      mdec->buf[0] = data;
-      mdec->phase = 2;
-    }
-    res = 0;
-  } else if (2 == mdec->phase) {
-    //等待鼠标的第2个字节
-    mdec->buf[1] = data;
-    mdec->phase = 3;
-    res = 0;
-  } else if (mdec->phase == 3) {
-    //等待鼠标的第3个字节
-    mdec->buf[2] = data;
-    mdec->phase = 1;
-
-    mdec->btn = mdec->buf[0] & 0x07;
-    mdec->x = mdec->buf[1];
-    mdec->y = mdec->buf[2];
-    
-    if ((mdec->buf[0] & 0x10) != 0) {
-      mdec->x |= 0xffffff00;
-    }
-    if ((mdec->buf[0] & 0x20) != 0) {
-      mdec->y |= 0xffffff00;
-    }
-
-    mdec->y = - mdec->y;//鼠标的Y方向与画面符号相反
-    
-    res = 1;
-  }
-  
-  return res;
+	if (mdec->phase == 0) {
+		/* 儅僂僗偺0xfa傪懸偭偰偄傞抜奒 */
+		if (dat == 0xfa) {
+			mdec->phase = 1;
+		}
+		return 0;
+	}
+	if (mdec->phase == 1) {
+		/* 儅僂僗偺1僶僀僩栚傪懸偭偰偄傞抜奒 */
+		if ((dat & 0xc8) == 0x08) {
+			/* 惓偟偄1僶僀僩栚偩偭偨 */
+			mdec->buf[0] = dat;
+			mdec->phase = 2;
+		}
+		return 0;
+	}
+	if (mdec->phase == 2) {
+		/* 儅僂僗偺2僶僀僩栚傪懸偭偰偄傞抜奒 */
+		mdec->buf[1] = dat;
+		mdec->phase = 3;
+		return 0;
+	}
+	if (mdec->phase == 3) {
+		/* 儅僂僗偺3僶僀僩栚傪懸偭偰偄傞抜奒 */
+		mdec->buf[2] = dat;
+		mdec->phase = 1;
+		mdec->btn = mdec->buf[0] & 0x07;
+		mdec->x = mdec->buf[1];
+		mdec->y = mdec->buf[2];
+		if ((mdec->buf[0] & 0x10) != 0) {
+			mdec->x |= 0xffffff00;
+		}
+		if ((mdec->buf[0] & 0x20) != 0) {
+			mdec->y |= 0xffffff00;
+		}
+		mdec->y = - mdec->y; /* 儅僂僗偱偼y曽岦偺晞崋偑夋柺偲斀懳 */
+		return 1;
+	}
+	return -1; /* 偙偙偵棃傞偙偲偼側偄偼偢 */
 }
