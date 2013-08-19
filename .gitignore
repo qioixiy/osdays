@@ -11,4 +11,5 @@
 *.map
 *.obj
 src/OS/TAGS
+src/si/
 tools/z_tools/qemu/fdimage0.bin
